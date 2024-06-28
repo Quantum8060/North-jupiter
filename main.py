@@ -24,7 +24,6 @@ config_ini.read("config.ini", encoding="utf-8")
 TOKEN = config_ini["MAIN"]["TOKEN"]
 
 bot = discord.Bot(intents=intents)
-bot.webhooks = {}
 Debug_guild = [1235247721934360577]
 
 global result
@@ -160,7 +159,7 @@ async def show(ctx: discord.ApplicationContext):
 
 
 @bot.slash_command(name="pay", description="送金します。")
-async def pay(ctx: discord.ApplicationContext, money: discord.Option(int, required=True, description="送金する金額を記入"), send: discord.Member, reason: discord.Option(str, required=True, description="取引内容を入力")):
+async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, description="送金する金額を記入"), send: discord.Member, reason: discord.Option(discord.SlashCommandOptionType.string, description="取引内容を入力") =None):
     b_id = str(ctx.user.id)
 
     data = load_blacklist_data()
@@ -168,28 +167,48 @@ async def pay(ctx: discord.ApplicationContext, money: discord.Option(int, requir
     user_info = get_user_info(ctx.user.id)
 
     if b_id not in data:
-        if money <= int(user_info[1]):
+        if amount <= int(user_info[1]):
+            if amount and send and reason:
+                user_info = get_user_info(ctx.author.id)
+                Balance = int(user_info[1]) - amount
 
-            user_info = get_user_info(ctx.author.id)
-            Balance = int(user_info[1]) - money
+                remittance = get_user_info(send.id)
+                partner = int(remittance[1]) + amount
 
-            remittance = get_user_info(send.id)
-            partner = int(remittance[1]) + money
+                user_id = str(ctx.author.id)
+                cash = int(Balance)
+                save_user(user_id, cash)
 
-            user_id = str(ctx.author.id)
-            cash = int(Balance)
-            save_user(user_id, cash)
+                user_id = str(send.id)
+                cash = int(partner)
+                save_user(user_id, cash)
 
-            user_id = str(send.id)
-            cash = int(partner)
-            save_user(user_id, cash)
+                embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+                embed.add_field(name="送金先", value=f"{send.mention}", inline=False)
+                embed.add_field(name="金額", value=f"{amount}", inline=False)
+                embed.add_field(name="取引内容", value=f"{reason}", inline=False)
 
-            embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
-            embed.add_field(name="送金先", value=f"{send.display_name}", inline=False)
-            embed.add_field(name="金額", value=f"{money}", inline=False)
-            embed.add_field(name="取引内容", value=f"{reason}", inline=False)
+                await ctx.response.send_message(embed=embed)
+            elif amount and send:
+                user_info = get_user_info(ctx.author.id)
+                Balance = int(user_info[1]) - amount
 
-            await ctx.response.send_message(embed=embed)
+                remittance = get_user_info(send.id)
+                partner = int(remittance[1]) + amount
+
+                user_id = str(ctx.author.id)
+                cash = int(Balance)
+                save_user(user_id, cash)
+
+                user_id = str(send.id)
+                cash = int(partner)
+                save_user(user_id, cash)
+
+                embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+                embed.add_field(name="送金先", value=f"{send.mention}", inline=False)
+                embed.add_field(name="金額", value=f"{amount}", inline=False)
+
+                await ctx.response.send_message(embed=embed)
         else:
             await ctx.response.send_message("残高が足りません。", ephemeral=True)
     else:
