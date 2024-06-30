@@ -40,6 +40,7 @@ async def on_ready():
     pass_channel = await bot.fetch_channel("1251824100515512432")
     await channel.send(f"{bot.user}BOT起動完了")
     await pass_channel.send(f"{result}")
+    bot.add_view(panelView())
 
 
 
@@ -97,7 +98,7 @@ async def sql(ctx: discord.ApplicationContext, user: discord.Member, money: disc
     embed = discord.Embed(title="口座開設完了", description="ノスタルジカをご利用いただきありがとうございます。\n口座の開設が完了しました。", color=0x38c571)
     embed.add_field(name="開設者", value=f"{user.mention}", inline=False)
     embed.add_field(name="開設担当者", value=f"{ctx.user.mention}", inline=False)
-    embed.add_field(name="残高", value=f"{user_info[1]}", inline=False)
+    embed.add_field(name="残高", value=f"{user_info[1]}ノスタル", inline=False)
 
     await ctx.respond(embed=embed)
 
@@ -125,7 +126,7 @@ async def give(ctx: discord.ApplicationContext, user: discord.Member, amount: di
     save_user(user_id, cash)
 
     embed = discord.Embed(title="付与", description=f"以下の金額を{user.mention}に付与しました。", color=0x38c571)
-    embed.add_field(name="金額", value=f"{amount}", inline=False)
+    embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
 
     await ctx.response.send_message(embed=embed)
 
@@ -139,6 +140,34 @@ async def help(ctx: discord.ApplicationContext):
     embed.add_field(name="help", value="```このhelpを表示します。```", inline=False)
 
     await ctx.response.send_message(embed=embed, ephemeral=True)
+
+class panelView(discord.ui.View):
+
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="口座開設", custom_id="panel-button", style=discord.ButtonStyle.green)
+    async def panel(self, button: discord.ui.Button, interaction: discord.Interaction):
+        user_id = str(interaction.user.id)
+        cash = int(10000)
+        save_user(user_id, cash)
+
+        user_info = get_user_info(interaction.user.id)
+
+        embed = discord.Embed(title="口座開設完了", description="ノスタルジカをご利用いただきありがとうございます。\n口座の開設が完了しました。", color=0x38c571)
+        embed.add_field(name="開設者", value=f"{interaction.user.mention}ノスタル", inline=False)
+        embed.add_field(name="残高", value=f"{user_info[1]}", inline=False)
+
+        await interaction.response.send_message(embed=embed)
+
+@admin.command(name="panel", description="口座開設用パネルを設置します。")
+@commands.has_permissions(administrator=True)
+async def panel(ctx: discord.ApplicationContext):
+
+    embed = discord.Embed(title="口座開設パネル", description="口座開設を行う方は以下のボタンを押してください。\n \n注意！\n現時点では口座開設済みの方が押すと口座情報がリセットされます。")
+
+    await ctx.response.send_message(embed=embed, view=panelView())
+
 
 
 bot.add_application_command(admin)
@@ -185,7 +214,7 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
 
                 embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
                 embed.add_field(name="送金先", value=f"{send.mention}", inline=False)
-                embed.add_field(name="金額", value=f"{amount}", inline=False)
+                embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
                 embed.add_field(name="取引内容", value=f"{reason}", inline=False)
 
                 await ctx.response.send_message(embed=embed)
