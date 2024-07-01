@@ -24,10 +24,7 @@ class inviteModal(discord.ui.Modal):
 
         self.add_item(discord.ui.InputText(label="タイトルを入力してください。", style=discord.InputTextStyle.short))
 
-    async def callback(self, interaction: discord.Interaction):
-
-        user_id = str(interaction.author.id)
-        data = load_data()
+    async def callback(self, interaction: discord.ApplicationContext):
 
         load_dotenv()
         correct = os.getenv('PASS')
