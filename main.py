@@ -25,6 +25,7 @@ TOKEN = config_ini["MAIN"]["TOKEN"]
 
 bot = discord.Bot(intents=intents)
 Debug_guild = [1235247721934360577]
+main_guild = [962647934695002173]
 
 global result
 result = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
@@ -83,12 +84,13 @@ def get_user_info(user_id):
     return c.fetchone()
 
 
-admin = discord.SlashCommandGroup("admin", "Math related commands")
 
+admin = discord.SlashCommandGroup("admin", "Math related commands")
 
 @admin.command(name="open", description="口座の開設")
 @commands.has_permissions(administrator=True)
 async def sql(ctx: discord.ApplicationContext, user: discord.Member, money: discord.Option(int, required=True, description="保存する内容を入力。")):
+
     user_id = str(user.id)
     cash = int(money)
     save_user(user_id, cash)
@@ -103,6 +105,7 @@ async def sql(ctx: discord.ApplicationContext, user: discord.Member, money: disc
     await ctx.respond(embed=embed)
 
 
+
 @admin.command(name="bal", description="ユーザーの所持金の表示")
 @commands.has_permissions(administrator=True)
 async def show(ctx: discord.ApplicationContext, user: discord.Member):
@@ -114,6 +117,8 @@ async def show(ctx: discord.ApplicationContext, user: discord.Member):
         await ctx.respond(embed=embed, ephemeral=True)
     else:
         await ctx.respond("口座がありません。", ephemeral=True)
+
+
 
 @admin.command(name="give", description="金を付与します。")
 @commands.has_permissions(administrator=True)
@@ -130,6 +135,8 @@ async def give(ctx: discord.ApplicationContext, user: discord.Member, amount: di
 
     await ctx.response.send_message(embed=embed)
 
+
+
 @admin.command(name="help", description="管理者用helpを表示します。")
 @commands.has_permissions(administrator=True)
 async def help(ctx: discord.ApplicationContext):
@@ -141,6 +148,8 @@ async def help(ctx: discord.ApplicationContext):
 
     await ctx.response.send_message(embed=embed, ephemeral=True)
 
+
+
 class panelView(discord.ui.View):
 
     def __init__(self):
@@ -149,16 +158,23 @@ class panelView(discord.ui.View):
     @discord.ui.button(label="口座開設", custom_id="panel-button", style=discord.ButtonStyle.green)
     async def panel(self, button: discord.ui.Button, interaction: discord.Interaction):
         user_id = str(interaction.user.id)
-        cash = int(10000)
-        save_user(user_id, cash)
 
-        user_info = get_user_info(interaction.user.id)
+        user_info = get_user_info(user_id)
+        if user_info:
+            embed = discord.Embed(title="口座確認", description="あなたの口座は存在します。", color=0x38c571)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+        else:
+            user_id = str(interaction.user.id)
+            cash = int(10000)
+            save_user(user_id, cash)
 
-        embed = discord.Embed(title="口座開設完了", description="ノスタルジカをご利用いただきありがとうございます。\n口座の開設が完了しました。", color=0x38c571)
-        embed.add_field(name="開設者", value=f"{interaction.user.mention}ノスタル", inline=False)
-        embed.add_field(name="残高", value=f"{user_info[1]}", inline=False)
+            user_info = get_user_info(interaction.user.id)
 
-        await interaction.response.send_message(embed=embed)
+            embed = discord.Embed(title="口座開設完了", description="ノスタルジカをご利用いただきありがとうございます。\n口座の開設が完了しました。", color=0x38c571)
+            embed.add_field(name="開設者", value=f"{interaction.user.mention}ノスタル", inline=False)
+            embed.add_field(name="残高", value=f"{user_info[1]}", inline=False)
+
+            await interaction.response.send_message(embed=embed)
 
 @admin.command(name="panel", description="口座開設用パネルを設置します。")
 @commands.has_permissions(administrator=True)
@@ -168,8 +184,6 @@ async def panel(ctx: discord.ApplicationContext):
 
     await ctx.response.send_message(embed=embed, view=panelView())
 
-
-
 bot.add_application_command(admin)
 
 
@@ -177,13 +191,42 @@ bot.add_application_command(admin)
 @bot.slash_command(name="bal", description="自分の所持金の表示")
 async def show(ctx: discord.ApplicationContext):
     user_info = get_user_info(ctx.user.id)
-    if user_info:
-        embed = discord.Embed(title="残高確認", description=f"{ctx.user.mention}の残高を表示しています。", color=0x4169e1)
-        embed.add_field(name="残高", value=f"{user_info[1]}ノスタル")
 
-        await ctx.respond(embed=embed, ephemeral=True)
+    b_id = str(ctx.user.id)
+    data = load_blacklist_data()
+
+    if b_id not in data:
+        if user_info:
+            embed = discord.Embed(title="残高確認", description=f"{ctx.user.mention}の残高を表示しています。", color=0x4169e1)
+            embed.add_field(name="残高", value=f"{user_info[1]}ノスタル")
+
+            await ctx.respond(embed=embed, ephemeral=True)
+        else:
+            embed = discord.Embed(title="口座確認", description="口座がありません。", color=0xff0000)
+            await ctx.respond(embed=embed, ephemeral=True)
     else:
-        await ctx.respond("口座がありません。", ephemeral=True)
+        await ctx.respond("あなたはブラックリストに登録されています。", ephemeral=True)
+
+
+
+@bot.user_command(name="balance")
+async def u_bal(ctx, user: discord.Member):
+    user_info = get_user_info(ctx.author.id)
+
+    b_id = str(ctx.author.id)
+    data = load_blacklist_data()
+
+    if b_id not in data:
+        if user_info:
+            embed = discord.Embed(title="残高確認", description=f"{ctx.author.mention}の残高を表示しています。", color=0x4169e1)
+            embed.add_field(name="残高", value=f"{user_info[1]}ノスタル")
+
+            await ctx.respond(embed=embed, ephemeral=True)
+        else:
+            embed = discord.Embed(title="口座確認", description="口座がありません。", color=0xff0000)
+            await ctx.respond(embed=embed, ephemeral=True)
+    else:
+        await ctx.response.send_message("あなたはブラックリストに登録されています。", ephemeral=True)
 
 
 
