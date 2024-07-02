@@ -144,6 +144,7 @@ async def help(ctx: discord.ApplicationContext):
     embed.add_field(name="bal", value="```指定したユーザーの所持金を確認します。```", inline=False)
     embed.add_field(name="open", value="```指定したユーザーの口座を開設します。```", inline=False)
     embed.add_field(name="give", value="```指定したユーザーに振り込みます。```", inline=False)
+    embed.add_field(name="panel", value="```口座開設用パネルを設置します。```", inline=False)
     embed.add_field(name="help", value="```このhelpを表示します。```", inline=False)
 
     await ctx.response.send_message(embed=embed, ephemeral=True)
@@ -307,9 +308,9 @@ async def search(ctx: discord.ApplicationContext, user: discord.Member):
 async def help(ctx: discord.ApplicationContext):
     embed = discord.Embed(title="help", description="一般のユーザー用のコマンドを一覧表示しています。\nすべてのコマンドはスラッシュコマンドです。/を入力して出てくるコマンドを実行してください。")
     embed.add_field(name="bal", value="```所持金を確認します。```", inline=False)
-    embed.add_field(name="pay", value="```指定したユーザーに支払いを行います。```", inline=False)
-    embed.add_field(name="search", value="```指定したユーザーに口座が存在するか確認します。```", inline=False)
-    embed.add_field(name="help", value="```このhelpを表示します。```", inline=False)
+    embed.add_field(name="pay", value="```指定し定したユーザーに口座が存在するか確認します。```", inline=False)
+    embed.add_field(name="help", value="```このhたユーザーに支払いを行います。```", inline=False)
+    embed.add_field(name="search", value="```指elpを表示します。```", inline=False)
 
     await ctx.response.send_message(embed=embed, ephemeral=True)
 
@@ -325,8 +326,7 @@ cogs_list = [
     'tasks',
     'random',
     'blacklist',
-    'stop',
-    'buy'
+    'stop'
 ]
 
 for cog in cogs_list:
