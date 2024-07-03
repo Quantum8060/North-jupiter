@@ -24,6 +24,7 @@ config_ini.read("config.ini", encoding="utf-8")
 TOKEN = config_ini["MAIN"]["TOKEN"]
 
 bot = discord.Bot(intents=intents)
+bot.webhooks = {}
 Debug_guild = [1235247721934360577]
 main_guild = [962647934695002173]
 
@@ -52,6 +53,18 @@ def load_blacklist_data():
         return json.load(file)
 
 def save_blacklist_data(data):
+    with open(blacklist_file, 'w') as file:
+        json.dump(data, file, indent=4)
+
+
+
+transaction_file = 'transaction.json'
+
+def load_transaction_data():
+    with open(blacklist_file, 'r') as file:
+        return json.load(file)
+
+def save_transaction_data(data):
     with open(blacklist_file, 'w') as file:
         json.dump(data, file, indent=4)
 
@@ -321,12 +334,12 @@ cogs_list = [
     'ping',
     'invite',
     'mcstatus',
-    'embed',
     'dm',
     'tasks',
     'random',
     'blacklist',
-    'stop'
+    'stop',
+    'embed'
 ]
 
 for cog in cogs_list:
