@@ -15,6 +15,7 @@ import string
 from dotenv import load_dotenv
 import sqlite3
 from datetime import datetime
+import pytz
 import aiofiles
 
 
@@ -45,10 +46,6 @@ async def on_ready():
     await channel.send(f"{bot.user}BOT起動完了")
     await pass_channel.send(f"{result}")
     bot.add_view(panelView())
-
-
-
-
 
 
 
@@ -273,7 +270,7 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
                 'id': ctx.user.id,
                 'amount': amount,
                 'reason': reason,
-                'timestamp': datetime.now().isoformat()
+                'timestamp': datetime.now(pytz.timezone('Asia/Tokyo')).strftime("%Y-%m-%d %H:%M:%S")
             }
 
             data = await load_transaction_data()
@@ -310,7 +307,7 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
             user_data = {
                 'id': ctx.user.id,
                 'amount': amount,
-                'timestamp': datetime.now().isoformat()
+                'timestamp': datetime.now(pytz.timezone('Asia/Tokyo')).strftime("%Y-%m-%d %H:%M:%S")
             }
 
             data = await load_transaction_data()
