@@ -38,7 +38,7 @@ class embed(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @discord.slash_command(name="announce", description="メッセージを埋め込みにして送信します。", guild_ids=main_guild)
+    @discord.slash_command(name="announce", description="メッセージを埋め込みにして送信します。")
     @commands.has_permissions(administrator=True)
     async def embed(self, interaction: discord.ApplicationContext):
         user_id = str(interaction.author.id)
