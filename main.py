@@ -96,10 +96,10 @@ admin = discord.SlashCommandGroup("admin", "Math related commands")
 
 @admin.command(name="open", description="口座の開設")
 @commands.has_permissions(administrator=True)
-async def open(ctx: discord.ApplicationContext, user: discord.Member, money: discord.Option(int, required=True, description="保存する内容を入力。")):
+async def open(ctx: discord.ApplicationContext, user: discord.Member, amount: discord.Option(int, required=True, description="保存する内容を入力。")):
 
     user_id = str(user.id)
-    cash = int(money)
+    cash = int(amount)
     save_user(user_id, cash)
 
     user_info = get_user_info(user.id)
@@ -149,10 +149,10 @@ async def give(ctx: discord.ApplicationContext, user: discord.Member, amount: di
 async def help(ctx: discord.ApplicationContext):
     embed = discord.Embed(title="help", description="管理者用のコマンドを一覧表示しています。\n管理者用コマンドはコマンドに「admin」とついています。")
     embed.add_field(name="bal", value="```指定したユーザーの所持金を確認します。```", inline=False)
-    embed.add_field(name="open", value="```指定したユーザーの口座を開設します。```", inline=False)
     embed.add_field(name="give", value="```指定したユーザーに振り込みます。```", inline=False)
-    embed.add_field(name="panel", value="```口座開設用パネルを設置します。```", inline=False)
     embed.add_field(name="help", value="```このhelpを表示します。```", inline=False)
+    embed.add_field(name="open", value="```指定したユーザーの口座を開設します。```", inline=False)
+    embed.add_field(name="panel", value="```口座開設用パネルを設置します。```", inline=False)
 
     await ctx.response.send_message(embed=embed, ephemeral=True)
 
@@ -224,7 +224,7 @@ async def bal(ctx: discord.ApplicationContext):
 
         await ctx.respond(embed=embed, ephemeral=True)
     else:
-        embed = discord.Embed(title="口座確認", description="口座がありません。", color=0xff0000)
+        embed = discord.Embed(title="データなし", description="口座がありません。", color=0xff0000)
         await ctx.respond(embed=embed, ephemeral=True)
 
 
@@ -341,9 +341,10 @@ async def search(ctx: discord.ApplicationContext, user: discord.Member):
 async def help(ctx: discord.ApplicationContext):
     embed = discord.Embed(title="help", description="一般のユーザー用のコマンドを一覧表示しています。\nすべてのコマンドはスラッシュコマンドです。/を入力して出てくるコマンドを実行してください。")
     embed.add_field(name="bal", value="```所持金を確認します。```", inline=False)
-    embed.add_field(name="pay", value="```指定し定したユーザーに口座が存在するか確認します。```", inline=False)
-    embed.add_field(name="help", value="```この指定したユーザーに支払いを行います。```", inline=False)
-    embed.add_field(name="search", value="```helpを表示します。```", inline=False)
+    embed.add_field(name="help", value="```helpを表示します。```", inline=False)
+    embed.add_field(name="pay", value="```この指定したユーザーに支払いを行います。```", inline=False)
+    embed.add_field(name="search", value="```指定したユーザーの口座が存在するか確認します。```", inline=False)
+    embed.add_field(name="tra", value="```送金履歴を確認します。\n※今後のアップデートで入金履歴も確認できるようになります！```", inline=False)
 
     await ctx.response.send_message(embed=embed, ephemeral=True)
 
