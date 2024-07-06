@@ -211,7 +211,7 @@ async def transaction(ctx, user: discord.Member):
 
 
 @admin.command(name="delete", description="口座を削除します。", guild_ids=main_guild)
-@commands.has_permissions(administrator=True)
+@commands.is_owner()
 async def delete(ctx: discord.ApplicationContext, user: discord.Member):
 
     user_id = str(user.id)
