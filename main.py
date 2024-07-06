@@ -361,6 +361,7 @@ async def help(ctx: discord.ApplicationContext):
     embed = discord.Embed(title="help", description="一般のユーザー用のコマンドを一覧表示しています。\nすべてのコマンドはスラッシュコマンドです。/を入力して出てくるコマンドを実行してください。")
     embed.add_field(name="bal", value="```所持金を確認します。```", inline=False)
     embed.add_field(name="help", value="```helpを表示します。```", inline=False)
+    embed.add_field(name="info", value="```ノスタルへの交換レートを表示します。```", inline=False)
     embed.add_field(name="pay", value="```この指定したユーザーに支払いを行います。```", inline=False)
     embed.add_field(name="search", value="```指定したユーザーの口座が存在するか確認します。```", inline=False)
     embed.add_field(name="tra", value="```送金履歴を確認します。\n※今後のアップデートで入金履歴も確認できるようになります！```", inline=False)
