@@ -169,7 +169,7 @@ class panelView(discord.ui.View):
 
         user_info = get_user_info(user_id)
         if user_info:
-            embed = discord.Embed(title="口座確認", description="あなたの口座は存在します。", color=0x38c571)
+            embed = discord.Embed(title="エラー", description="あなたの口座はすでに存在しています。", color=0x38c571)
             await interaction.response.send_message(embed=embed, ephemeral=True)
         else:
             user_id = str(interaction.user.id)
@@ -194,7 +194,7 @@ async def panel(ctx: discord.ApplicationContext):
 
 
 
-@admin.command(name="tra", description="取引履歴を表示します。", guild_ids=main_guild)
+@admin.command(name="tra", description="取引履歴を表示します。")
 @commands.has_permissions(administrator=True)
 async def transaction(ctx, user: discord.Member):
     data = await load_transaction_data()
@@ -207,6 +207,25 @@ async def transaction(ctx, user: discord.Member):
     else:
         embed = discord.Embed(title="データなし", description=f"{ctx.user.mention}の取引履歴は存在しません。", color=0xff0000)
         await ctx.respond(embed=embed, ephemeral=True)
+
+
+
+@admin.command(name="delete", description="口座を削除します。", guild_ids=main_guild)
+@commands.has_permissions(administrator=True)
+async def delete(ctx: discord.ApplicationContext, user: discord.Member):
+
+    user_id = str(user.id)
+
+    user_info = get_user_info(user_id)
+
+    if user_info:
+        c.execute(f"""DELETE FROM users WHERE id="{user.id}";""")
+        conn.commit()
+
+        await ctx.response.send_message(f"{user.mention}のデータを削除しました。", ephemeral=True)
+    else:
+        await ctx.response.send_message(f"{user.mention}の口座は存在しません。", ephemeral=True)
+
 
 bot.add_application_command(admin)
 
@@ -365,7 +384,7 @@ async def transaction(ctx: discord.ApplicationContext):
 
 
 
-@bot.slash_command(name="info", description="ノスタルへの交換レートを表示します。", guild_ids=Debug_guild)
+@bot.slash_command(name="info", description="ノスタルへの交換レートを表示します。")
 async def info(ctx: discord.ApplicationContext):
 
     embed = discord.Embed(title="交換レート", description="以下のアイテムをノスタルに交換できます。\n交換を希望する方は <@!1009494490526007336> に連絡してください。", color=0x38c571)
