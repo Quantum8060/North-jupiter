@@ -365,6 +365,19 @@ async def transaction(ctx: discord.ApplicationContext):
 
 
 
+@bot.slash_command(name="info", description="ノスタルへの交換レートを表示します。", guild_ids=Debug_guild)
+async def info(ctx: discord.ApplicationContext):
+
+    embed = discord.Embed(title="交換レート", description="以下のアイテムをノスタルに交換できます。\n交換を希望する方は <@!1009494490526007336> に連絡してください。", color=0x38c571)
+    embed.add_field(name="鉄", value="1N", inline=True)
+    embed.add_field(name="黒曜石", value="5N", inline=True)
+    embed.add_field(name="ネザライト", value="4500N", inline=True)
+    embed.add_field(name="100ヨーク通貨", value="1N", inline=True)
+    embed.add_field(name="100ペンギン帝国通貨", value="1N", inline=True)
+
+    await ctx.response.send_message(embed=embed, ephemeral=True)
+
+
 #cogs登録
 cogs_list = [
     'clear',
