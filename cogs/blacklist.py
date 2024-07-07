@@ -5,7 +5,7 @@ import json
 
 Debug_guild = [1235247721934360577]
 
-blacklist_file = 'company.json'
+blacklist_file = 'blacklist.json'
 
 def load_blacklist_data():
     with open(blacklist_file, 'r') as file:
