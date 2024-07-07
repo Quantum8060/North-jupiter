@@ -17,7 +17,7 @@ import sqlite3
 from datetime import datetime
 import pytz
 import aiofiles
-import toml
+import yaml
 
 
 
@@ -95,6 +95,16 @@ async def load_company_data():
 async def save_company_data(data):
     async with aiofiles.open(company_file, 'w') as c_file:
         await c_file.write(json.dumps(c_file, indent=4))
+
+
+
+with open('company.yaml', encoding='utf-8')as f:
+    company = yaml.safe_load(f)
+
+
+def close_company():
+    with open('company.yaml','w')as f:
+        yaml.dump(company, f, default_flow_style=False, allow_unicode=True)
 
 
 
@@ -289,7 +299,7 @@ bot.add_application_command(admin)
 
 
 @bot.slash_command(name="c_open", description="企業を追加します。", guild_ids=Debug_guild)
-async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, description="企業名を入力。"), amount: discord.Option(int, required=True, description="保存する内容を入力。")):
+async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, description="企業名を入力。"), amount: discord.Option(int, required=True, description="保存する内容を入力。"), user: discord.Member):
 
     company_id = str(name)
     cash = int(amount)
@@ -298,16 +308,21 @@ async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, desc
     company_info = get_company_info(name)
 
 
+
+
     embed = discord.Embed(title="企業口座開設完了", description="ノスタルジカをご利用いただきありがとうございます。\n以下の企業口座の開設が完了しました。", color=0x38c571)
     embed.add_field(name="企業名", value=f"{name}", inline=False)
     embed.add_field(name="開設担当者", value=f"{ctx.user.mention}", inline=False)
+    embed.add_field(name="社長", value=f"{user.mention}", inline=False)
     embed.add_field(name="残高", value=f"{company_info[1]}ノスタル", inline=False)
 
     await ctx.respond(embed=embed)
 
+
+
 @bot.slash_command(name="c_bal", description="企業の所持金の表示", guild_ids=Debug_guild)
 @commands.has_permissions(administrator=True)
-async def bal(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
+async def c_bal(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
     company_info = get_company_info(company)
     if company_info:
         embed = discord.Embed(title="残高確認", description=f"{company}の残高を表示しています。", color=0x38c571)
@@ -316,6 +331,58 @@ async def bal(ctx: discord.ApplicationContext, company: discord.Option(str, desc
         await ctx.respond(embed=embed, ephemeral=True)
     else:
         await ctx.respond("口座がありません。", ephemeral=True)
+
+
+
+@bot.slash_command(name="c_pay", description="企業から送金します。", guild_ids=Debug_guild)
+async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, description="金額を入力してください。"), Mycompany: discord.Option(str, description="企業名を入力"), user: discord.Member = None, company: discord.Option(str, description="企業名を入力") = None):
+
+    company_info = get_company_info(Mycompany)
+    user_info = get_user_info(ctx.user.id)
+
+    if amount <= int(company_info[1]):
+        if amount and Mycompany and user:
+            company_info = get_company_info(Mycompany)
+            Balance = int(company_info[1]) - amount
+
+            remittance = get_user_info(user.id)
+            partner = int(remittance[1]) + amount
+
+            company_id = str(Mycompany)
+            cash = int(Balance)
+            save_company(company_id, cash)
+
+            user_id = str(user.id)
+            cash = int(partner)
+            save_user(user_id, cash)
+
+            embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+            embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
+            embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
+
+            await ctx.response.send_message(embed=embed)
+        elif amount and Mycompany and company:
+            company_info = get_company_info(Mycompany)
+            Balance = int(company_info[1]) - amount
+
+            remittance = get_company_info(company)
+            partner = int(remittance[1]) + amount
+
+            Mycompany_id = str(Mycompany)
+            cash = int(Balance)
+            save_user(Mycompany_id, cash)
+
+            company = str(company)
+            cash = int(partner)
+            save_user(company, cash)
+
+            embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+            embed.add_field(name="送金先", value=f"{company}", inline=False)
+            embed.add_field(name="金額", value=f"{amount}", inline=False)
+
+            await ctx.response.send_message(embed=embed)
+    else:
+        await ctx.response.send_message("残高が足りません。", ephemeral=True)
 
 
 
