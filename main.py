@@ -17,6 +17,11 @@ import sqlite3
 from datetime import datetime
 import pytz
 import aiofiles
+import toml
+
+
+
+
 
 
 intents = discord.Intents.default()
@@ -34,6 +39,11 @@ main_guild = [962647934695002173, 1235247721934360577]
 global result
 result = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
 
+
+
+
+
+
 #起動通知
 @bot.event
 async def on_ready():
@@ -47,6 +57,15 @@ async def on_ready():
     await pass_channel.send(f"{result}")
     bot.add_view(panelView())
 
+#stop
+def stop_py():
+    if (bot.is_closed()):
+        print("osを切ります。")
+        os.system("kill 1")
+
+
+
+
 
 
 transaction_file = 'transaction.json'
@@ -58,58 +77,89 @@ async def load_transaction_data():
     except FileNotFoundError:
         return {}
 
-async def save_transaction_data(data):
+async def save_transaction_data(t_data):
     async with aiofiles.open(transaction_file, 'w') as t_file:
-        await t_file.write(json.dumps(data, indent=4))
+        await t_file.write(json.dumps(t_data, indent=4))
 
 
 
-#stop
-def stop_py():
-    if (bot.is_closed()):
-        print("osを切ります。")
-        os.system("kill 1")
+company_file = 'company.json'
+
+async def load_company_data():
+    try:
+        async with aiofiles.open(company_file, 'r') as c_file:
+            return json.loads(await c_file.read())
+    except FileNotFoundError:
+        return{}
+
+async def save_company_data(data):
+    async with aiofiles.open(company_file, 'w') as c_file:
+        await c_file.write(json.dumps(c_file, indent=4))
+
+
+
 
 
 
 conn = sqlite3.connect('users.db')
 c = conn.cursor()
 
-# テーブルが存在しない場合は作成
+
+
 c.execute('''CREATE TABLE IF NOT EXISTS users
              (id TEXT PRIMARY KEY, cash TEXT)''')
+c.execute('''CREATE TABLE IF NOT EXISTS company
+             (id TEXT PRIMARY KEY, cash TEXT)''')
 conn.commit()
+
+
 
 def save_user(user_id, cash):
     with conn:
         c.execute("INSERT OR IGNORE INTO users (id, cash) VALUES (?, ?)", (user_id, cash))
         c.execute("UPDATE users SET cash = ? WHERE id = ?", (cash, user_id))
 
-# ユーザー情報を取得する関数
 def get_user_info(user_id):
     c.execute("SELECT id, cash FROM users WHERE id = ?", (user_id,))
     return c.fetchone()
 
 
 
-admin = discord.SlashCommandGroup("admin", "Math related commands")
+def save_company(company_id, cash):
+    with conn:
+        c.execute("INSERT OR IGNORE INTO users (id, cash) VALUES (?, ?)", (company_id, cash))
+        c.execute("UPDATE users SET cash = ? WHERE id = ?", (cash, company_id))
+
+def get_company_info(company_id):
+    c.execute("SELECT id, cash FROM users WHERE id = ?", (company_id,))
+    return c.fetchone()
+
+
+
+
+
+
+admin = discord.SlashCommandGroup("admin", "admin related commands")
 
 @admin.command(name="open", description="口座の開設")
 @commands.has_permissions(administrator=True)
 async def open(ctx: discord.ApplicationContext, user: discord.Member, amount: discord.Option(int, required=True, description="保存する内容を入力。")):
 
-    user_id = str(user.id)
-    cash = int(amount)
-    save_user(user_id, cash)
+    if int(amount) >= 0:
+        user_id = str(user.id)
+        cash = int(amount)
+        save_user(user_id, cash)
 
-    user_info = get_user_info(user.id)
+        user_info = get_user_info(user.id)
 
-    embed = discord.Embed(title="口座開設完了", description="ノスタルジカをご利用いただきありがとうございます。\n口座の開設が完了しました。", color=0x38c571)
-    embed.add_field(name="開設者", value=f"{user.mention}", inline=False)
-    embed.add_field(name="開設担当者", value=f"{ctx.user.mention}", inline=False)
-    embed.add_field(name="残高", value=f"{user_info[1]}ノスタル", inline=False)
+        embed = discord.Embed(title="口座開設完了", description="ノスタルジカをご利用いただきありがとうございます。\n口座の開設が完了しました。", color=0x38c571)
+        embed.add_field(name="開設者", value=f"{user.mention}", inline=False)
+        embed.add_field(name="開設担当者", value=f"{ctx.user.mention}", inline=False)
+        embed.add_field(name="残高", value=f"{user_info[1]}ノスタル", inline=False)
 
-    await ctx.respond(embed=embed)
+        await ctx.respond(embed=embed)
+    else:
+        await ctx.respond("0以下にはできません。", ephemeral=True)
 
 
 
@@ -133,14 +183,17 @@ async def give(ctx: discord.ApplicationContext, user: discord.Member, amount: di
 
     user_info = get_user_info(user.id)
 
-    user_id = str(user.id)
-    cash = int(user_info[1]) + amount
-    save_user(user_id, cash)
+    if int(user_info[1]) + amount >= 0:
+        user_id = str(user.id)
+        cash = int(user_info[1]) + amount
+        save_user(user_id, cash)
 
-    embed = discord.Embed(title="付与", description=f"以下の金額を{user.mention}に付与しました。", color=0x38c571)
-    embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
+        embed = discord.Embed(title="付与", description=f"以下の金額を{user.mention}に付与しました。", color=0x38c571)
+        embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
 
-    await ctx.response.send_message(embed=embed)
+        await ctx.response.send_message(embed=embed)
+    else:
+        await ctx.respond("所持金を0以下にすることはできません。", ephemeral=True)
 
 
 
@@ -227,7 +280,45 @@ async def delete(ctx: discord.ApplicationContext, user: discord.Member):
         await ctx.response.send_message(f"{user.mention}の口座は存在しません。", ephemeral=True)
 
 
+
 bot.add_application_command(admin)
+
+
+
+
+
+
+@bot.slash_command(name="c_open", description="企業を追加します。", guild_ids=Debug_guild)
+async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, description="企業名を入力。"), amount: discord.Option(int, required=True, description="保存する内容を入力。")):
+
+    company_id = str(name)
+    cash = int(amount)
+    save_company(company_id, cash)
+
+    company_info = get_company_info(name)
+
+
+    embed = discord.Embed(title="企業口座開設完了", description="ノスタルジカをご利用いただきありがとうございます。\n以下の企業口座の開設が完了しました。", color=0x38c571)
+    embed.add_field(name="企業名", value=f"{name}", inline=False)
+    embed.add_field(name="開設担当者", value=f"{ctx.user.mention}", inline=False)
+    embed.add_field(name="残高", value=f"{company_info[1]}ノスタル", inline=False)
+
+    await ctx.respond(embed=embed)
+
+@bot.slash_command(name="c_bal", description="企業の所持金の表示", guild_ids=Debug_guild)
+@commands.has_permissions(administrator=True)
+async def bal(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
+    company_info = get_company_info(company)
+    if company_info:
+        embed = discord.Embed(title="残高確認", description=f"{company}の残高を表示しています。", color=0x38c571)
+        embed.add_field(name="残高", value=f"{company_info[1]}ノスタル")
+
+        await ctx.respond(embed=embed, ephemeral=True)
+    else:
+        await ctx.respond("口座がありません。", ephemeral=True)
+
+
+
 
 
 
@@ -398,6 +489,10 @@ async def info(ctx: discord.ApplicationContext):
     await ctx.response.send_message(embed=embed, ephemeral=True)
 
 
+
+
+
+
 #cogs登録
 cogs_list = [
     'clear',
@@ -414,6 +509,10 @@ cogs_list = [
 
 for cog in cogs_list:
     bot.load_extension(f'cogs.{cog}')
+
+
+
+
 
 
 bot.run(TOKEN)
