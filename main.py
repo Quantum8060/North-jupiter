@@ -598,6 +598,11 @@ async def info(ctx: discord.ApplicationContext):
 
 
 
+@bot.slash_command(name="leave", description="...")
+@commands.is_owner()
+async def leave(ctx: discord.ApplicationContext):
+    await ctx.respond("サーバーから退出します。")
+    await ctx.guild.leave()
 
 
 
