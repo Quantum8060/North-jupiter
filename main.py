@@ -83,31 +83,6 @@ async def save_transaction_data(t_data):
 
 
 
-company_file = 'company.json'
-
-async def load_company_data():
-    try:
-        async with aiofiles.open(company_file, 'r') as c_file:
-            return json.loads(await c_file.read())
-    except FileNotFoundError:
-        return{}
-
-async def save_company_data(data):
-    async with aiofiles.open(company_file, 'w') as c_file:
-        await c_file.write(json.dumps(c_file, indent=4))
-
-
-
-with open('company.yaml', encoding='utf-8')as f:
-    company = yaml.safe_load(f)
-
-
-def close_company():
-    with open('company.yaml','w')as f:
-        yaml.dump(company, f, default_flow_style=False, allow_unicode=True)
-
-
-
 
 
 
@@ -120,6 +95,8 @@ c.execute('''CREATE TABLE IF NOT EXISTS users
              (id TEXT PRIMARY KEY, cash TEXT)''')
 c.execute('''CREATE TABLE IF NOT EXISTS company
              (id TEXT PRIMARY KEY, cash TEXT)''')
+c.execute('''CREATE TABLE IF NOT EXISTS ceo
+             (id TEXT PRIMARY KEY, company1 TEXT, company2 TEXT, company3 TEXT)''')
 conn.commit()
 
 
@@ -142,6 +119,17 @@ def save_company(company_id, cash):
 
 def get_company_info(company_id):
     c.execute("SELECT id, cash FROM users WHERE id = ?", (company_id,))
+    return c.fetchone()
+
+
+
+def save_ceo(ceo, company1):
+    with conn:
+        c.execute("INSERT OR IGNORE INTO users (id, cash) VALUES (?, ?)", (ceo, company1))
+        c.execute("UPDATE users SET cash = ? WHERE id = ?", (company1, ceo))
+
+def get_ceo_info(ceo):
+    c.execute("SELECT id, cash FROM users WHERE id = ?", (ceo,))
     return c.fetchone()
 
 
@@ -339,50 +327,54 @@ async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, des
 
     company_info = get_company_info(Mycompany)
     user_info = get_user_info(ctx.user.id)
+    ceo_info = get_ceo_info(ctx.user.id)
 
-    if amount <= int(company_info[1]):
-        if amount and Mycompany and user:
-            company_info = get_company_info(Mycompany)
-            Balance = int(company_info[1]) - amount
+    if ceo_info:
+        if amount <= int(company_info[1]):
+            if amount and Mycompany and user:
+                company_info = get_company_info(Mycompany)
+                Balance = int(company_info[1]) - amount
 
-            remittance = get_user_info(user.id)
-            partner = int(remittance[1]) + amount
+                remittance = get_user_info(user.id)
+                partner = int(remittance[1]) + amount
 
-            company_id = str(Mycompany)
-            cash = int(Balance)
-            save_company(company_id, cash)
+                company_id = str(Mycompany)
+                cash = int(Balance)
+                save_company(company_id, cash)
 
-            user_id = str(user.id)
-            cash = int(partner)
-            save_user(user_id, cash)
+                user_id = str(user.id)
+                cash = int(partner)
+                save_user(user_id, cash)
 
-            embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
-            embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
-            embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
+                embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+                embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
+                embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
 
-            await ctx.response.send_message(embed=embed)
-        elif amount and Mycompany and company:
-            company_info = get_company_info(Mycompany)
-            Balance = int(company_info[1]) - amount
+                await ctx.response.send_message(embed=embed)
+            elif amount and Mycompany and company:
+                company_info = get_company_info(Mycompany)
+                Balance = int(company_info[1]) - amount
 
-            remittance = get_company_info(company)
-            partner = int(remittance[1]) + amount
+                remittance = get_company_info(company)
+                partner = int(remittance[1]) + amount
 
-            Mycompany_id = str(Mycompany)
-            cash = int(Balance)
-            save_user(Mycompany_id, cash)
+                Mycompany_id = str(Mycompany)
+                cash = int(Balance)
+                save_user(Mycompany_id, cash)
 
-            company = str(company)
-            cash = int(partner)
-            save_user(company, cash)
+                company = str(company)
+                cash = int(partner)
+                save_user(company, cash)
 
-            embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
-            embed.add_field(name="送金先", value=f"{company}", inline=False)
-            embed.add_field(name="金額", value=f"{amount}", inline=False)
+                embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+                embed.add_field(name="送金先", value=f"{company}", inline=False)
+                embed.add_field(name="金額", value=f"{amount}", inline=False)
 
-            await ctx.response.send_message(embed=embed)
+                await ctx.response.send_message(embed=embed)
+        else:
+            await ctx.response.send_message("残高が足りません。", ephemeral=True)
     else:
-        await ctx.response.send_message("残高が足りません。", ephemeral=True)
+        await ctx.response.send_message("あなたはこの企業の口座にアクセスできません。", ephemeral=True)
 
 
 
