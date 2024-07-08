@@ -550,6 +550,8 @@ async def info(ctx: discord.ApplicationContext):
     embed.add_field(name="鉄", value="1N", inline=True)
     embed.add_field(name="黒曜石", value="5N", inline=True)
     embed.add_field(name="ネザライト", value="4500N", inline=True)
+    embed.add_field(name="100Ruby", value="1N", inline=True)
+    embed.add_field(name="10itum", value="1N", inline=True)
     embed.add_field(name="100ヨーク通貨", value="1N", inline=True)
     embed.add_field(name="100ペンギン帝国通貨", value="1N", inline=True)
 
