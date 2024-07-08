@@ -17,7 +17,7 @@ import sqlite3
 from datetime import datetime
 import pytz
 import aiofiles
-import yaml
+import toml
 
 
 
@@ -68,6 +68,24 @@ def stop_py():
 
 
 
+TOML_FILE = 'company.toml'
+
+async def load_company_data():
+    if not os.path.exists(TOML_FILE):
+        return {}
+    async with aiofiles.open(TOML_FILE, 'r') as file:
+        contents = await file.read()
+        return toml.loads(contents).get('companies', {})
+
+async def save_company_data(data):
+    async with aiofiles.open(TOML_FILE, 'w') as file:
+        await file.write(toml.dumps({'companies': data}))
+
+
+
+
+
+
 transaction_file = 'transaction.json'
 
 async def load_transaction_data():
@@ -92,15 +110,14 @@ c = conn.cursor()
 
 
 c.execute('''CREATE TABLE IF NOT EXISTS users
-             (id TEXT PRIMARY KEY, cash TEXT)''')
+             (id TEXT PRIMARY KEY, cash INTEGER )''')
 c.execute('''CREATE TABLE IF NOT EXISTS company
-             (id TEXT PRIMARY KEY, cash TEXT)''')
-c.execute('''CREATE TABLE IF NOT EXISTS ceo
-             (id TEXT PRIMARY KEY, company1 TEXT, company2 TEXT, company3 TEXT)''')
+             (id TEXT PRIMARY KEY, cash INTEGER)''')
 conn.commit()
 
 
 
+#SQlite3
 def save_user(user_id, cash):
     with conn:
         c.execute("INSERT OR IGNORE INTO users (id, cash) VALUES (?, ?)", (user_id, cash))
@@ -114,24 +131,40 @@ def get_user_info(user_id):
 
 def save_company(company_id, cash):
     with conn:
-        c.execute("INSERT OR IGNORE INTO users (id, cash) VALUES (?, ?)", (company_id, cash))
-        c.execute("UPDATE users SET cash = ? WHERE id = ?", (cash, company_id))
+        c.execute("INSERT OR IGNORE INTO company (id, cash) VALUES (?, ?)", (company_id, cash))
+        c.execute("UPDATE company SET cash = ? WHERE id = ?", (cash, company_id))
 
 def get_company_info(company_id):
-    c.execute("SELECT id, cash FROM users WHERE id = ?", (company_id,))
+    c.execute("SELECT id, cash FROM company WHERE id = ?", (company_id,))
     return c.fetchone()
 
 
 
-def save_ceo(ceo, company1):
-    with conn:
-        c.execute("INSERT OR IGNORE INTO users (id, cash) VALUES (?, ?)", (ceo, company1))
-        c.execute("UPDATE users SET cash = ? WHERE id = ?", (company1, ceo))
+#TOML
+async def save_company_access(company_id, ceo, employees):
+    companies = await load_company_data()
+    companies[company_id] = {'ceo': ceo, 'employees': employees}
+    await save_company_data(companies)
 
-def get_ceo_info(ceo):
-    c.execute("SELECT id, cash FROM users WHERE id = ?", (ceo,))
-    return c.fetchone()
+async def get_company_access(company_id):
+    companies = await load_company_data()
+    return companies.get(company_id)
 
+async def add_employee(company_id, employee_id):
+    companies = await load_company_data()
+    if company_id in companies:
+        if 'employees' not in companies[company_id]:
+            companies[company_id]['employees'] = []
+        companies[company_id]['employees'].append(employee_id)
+        await save_company_data(companies)
+        return True
+    return False
+
+async def is_authorized_user(user_id, company_id):
+    company_access = await get_company_access(company_id)
+    if company_access:
+        return user_id == company_access['ceo'] or user_id in company_access['employees']
+    return False
 
 
 
@@ -288,15 +321,14 @@ bot.add_application_command(admin)
 
 @bot.slash_command(name="c_open", description="企業を追加します。", guild_ids=Debug_guild)
 async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, description="企業名を入力。"), amount: discord.Option(int, required=True, description="保存する内容を入力。"), user: discord.Member):
-
     company_id = str(name)
     cash = int(amount)
     save_company(company_id, cash)
 
+    ceo = str(user.id)
+    await save_company_access(company_id, ceo, [])
+
     company_info = get_company_info(name)
-
-
-
 
     embed = discord.Embed(title="企業口座開設完了", description="ノスタルジカをご利用いただきありがとうございます。\n以下の企業口座の開設が完了しました。", color=0x38c571)
     embed.add_field(name="企業名", value=f"{name}", inline=False)
@@ -323,59 +355,74 @@ async def c_bal(ctx: discord.ApplicationContext, company: discord.Option(str, de
 
 
 @bot.slash_command(name="c_pay", description="企業から送金します。", guild_ids=Debug_guild)
-async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, description="金額を入力してください。"), Mycompany: discord.Option(str, description="企業名を入力"), user: discord.Member = None, company: discord.Option(str, description="企業名を入力") = None):
-
-    company_info = get_company_info(Mycompany)
-    user_info = get_user_info(ctx.user.id)
-    ceo_info = get_ceo_info(ctx.user.id)
-
-    if ceo_info:
-        if amount <= int(company_info[1]):
-            if amount and Mycompany and user:
-                company_info = get_company_info(Mycompany)
-                Balance = int(company_info[1]) - amount
-
-                remittance = get_user_info(user.id)
-                partner = int(remittance[1]) + amount
-
-                company_id = str(Mycompany)
-                cash = int(Balance)
-                save_company(company_id, cash)
-
-                user_id = str(user.id)
-                cash = int(partner)
-                save_user(user_id, cash)
-
-                embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
-                embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
-                embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
-
-                await ctx.response.send_message(embed=embed)
-            elif amount and Mycompany and company:
-                company_info = get_company_info(Mycompany)
-                Balance = int(company_info[1]) - amount
-
-                remittance = get_company_info(company)
-                partner = int(remittance[1]) + amount
-
-                Mycompany_id = str(Mycompany)
-                cash = int(Balance)
-                save_user(Mycompany_id, cash)
-
-                company = str(company)
-                cash = int(partner)
-                save_user(company, cash)
-
-                embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
-                embed.add_field(name="送金先", value=f"{company}", inline=False)
-                embed.add_field(name="金額", value=f"{amount}", inline=False)
-
-                await ctx.response.send_message(embed=embed)
-        else:
-            await ctx.response.send_message("残高が足りません。", ephemeral=True)
-    else:
+async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, description="金額を入力してください。"), mycompany: discord.Option(str, description="企業名を入力"), user: discord.Member = None, company: discord.Option(str, description="企業名を入力") = None):
+    company_info = get_company_info(mycompany)
+    user_id = str(ctx.user.id)
+    if not await is_authorized_user(user_id, mycompany):
         await ctx.response.send_message("あなたはこの企業の口座にアクセスできません。", ephemeral=True)
+        return
 
+    if amount <= int(company_info[1]):
+        if amount and mycompany and user:
+            company_info = get_company_info(mycompany)
+            Balance = int(company_info[1]) - amount
+
+            remittance = get_user_info(user.id)
+            partner = int(remittance[1]) + amount
+
+            company_id = str(mycompany)
+            cash = int(Balance)
+            save_company(company_id, cash)
+
+            user_id = str(user.id)
+            cash = int(partner)
+            save_user(user_id, cash)
+
+            embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+            embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
+            embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
+
+            await ctx.response.send_message(embed=embed)
+        elif amount and mycompany and company:
+            company_info = get_company_info(mycompany)
+            Balance = int(company_info[1]) - amount
+
+            remittance = get_company_info(company)
+            partner = int(remittance[1]) + amount
+
+            Mycompany_id = str(mycompany)
+            cash = int(Balance)
+            save_company(Mycompany_id, cash)
+
+            company = str(company)
+            cash = int(partner)
+            save_company(company, cash)
+
+            embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+            embed.add_field(name="送金先", value=f"{company}", inline=False)
+            embed.add_field(name="金額", value=f"{amount}", inline=False)
+
+            await ctx.response.send_message(embed=embed)
+    else:
+        await ctx.response.send_message("残高が足りません。", ephemeral=True)
+
+
+
+@bot.slash_command(name="c_add", description="企業に社員を追加します。", guild_ids=Debug_guild)
+async def add_employee_command(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。"), user: discord.Member):
+    company_id = str(company)
+    employee_id = str(user.id)
+
+    ceo_id = str(ctx.user.id)
+    company_access = await get_company_access(company_id)
+    if company_access.get('ceo') != ceo_id:
+        await ctx.respond("あなたはこの企業のCEOではありません。社員を追加できません。", ephemeral=True)
+        return
+
+    if await add_employee(company_id, employee_id):
+        await ctx.respond(f"{user.mention} が {company} の社員として追加されました。", ephemeral=True)
+    else:
+        await ctx.respond(f"企業 {company} が見つかりませんでした。", ephemeral=True)
 
 
 
