@@ -319,7 +319,12 @@ bot.add_application_command(admin)
 
 
 
-@bot.slash_command(name="c_open", description="企業を追加します。", guild_ids=Debug_guild)
+company = discord.SlashCommandGroup("company", "company related commands")
+
+
+
+@company.command(name="open", description="企業を追加します。", guild_ids=Debug_guild)
+@commands.has_permissions(administrator=True)
 async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, description="企業名を入力。"), amount: discord.Option(int, required=True, description="保存する内容を入力。"), user: discord.Member):
     company_id = str(name)
     cash = int(amount)
@@ -340,10 +345,15 @@ async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, desc
 
 
 
-@bot.slash_command(name="c_bal", description="企業の所持金の表示", guild_ids=Debug_guild)
-@commands.has_permissions(administrator=True)
+@company.command(name="bal", description="企業の所持金の表示", guild_ids=Debug_guild)
 async def c_bal(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
     company_info = get_company_info(company)
+    user_id = str(ctx.user.id)
+
+    if not await is_authorized_user(user_id, company):
+        await ctx.response.send_message("あなたはこの企業の口座にアクセスできません。", ephemeral=True)
+        return
+
     if company_info:
         embed = discord.Embed(title="残高確認", description=f"{company}の残高を表示しています。", color=0x38c571)
         embed.add_field(name="残高", value=f"{company_info[1]}ノスタル")
@@ -354,7 +364,7 @@ async def c_bal(ctx: discord.ApplicationContext, company: discord.Option(str, de
 
 
 
-@bot.slash_command(name="c_pay", description="企業から送金します。", guild_ids=Debug_guild)
+@company.command(name="pay", description="企業から送金します。", guild_ids=Debug_guild)
 async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, description="金額を入力してください。"), mycompany: discord.Option(str, description="企業名を入力"), user: discord.Member = None, company: discord.Option(str, description="企業名を入力") = None):
     company_info = get_company_info(mycompany)
     user_id = str(ctx.user.id)
@@ -362,53 +372,56 @@ async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, des
         await ctx.response.send_message("あなたはこの企業の口座にアクセスできません。", ephemeral=True)
         return
 
-    if amount <= int(company_info[1]):
-        if amount and mycompany and user:
-            company_info = get_company_info(mycompany)
-            Balance = int(company_info[1]) - amount
+    if amount > int(0):
+        if amount <= int(company_info[1]):
+            if amount and mycompany and user:
+                company_info = get_company_info(mycompany)
+                Balance = int(company_info[1]) - amount
 
-            remittance = get_user_info(user.id)
-            partner = int(remittance[1]) + amount
+                remittance = get_user_info(user.id)
+                partner = int(remittance[1]) + amount
 
-            company_id = str(mycompany)
-            cash = int(Balance)
-            save_company(company_id, cash)
+                company_id = str(mycompany)
+                cash = int(Balance)
+                save_company(company_id, cash)
 
-            user_id = str(user.id)
-            cash = int(partner)
-            save_user(user_id, cash)
+                user_id = str(user.id)
+                cash = int(partner)
+                save_user(user_id, cash)
 
-            embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
-            embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
-            embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
+                embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+                embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
+                embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
 
-            await ctx.response.send_message(embed=embed)
-        elif amount and mycompany and company:
-            company_info = get_company_info(mycompany)
-            Balance = int(company_info[1]) - amount
+                await ctx.response.send_message(embed=embed)
+            elif amount and mycompany and company:
+                company_info = get_company_info(mycompany)
+                Balance = int(company_info[1]) - amount
 
-            remittance = get_company_info(company)
-            partner = int(remittance[1]) + amount
+                remittance = get_company_info(company)
+                partner = int(remittance[1]) + amount
 
-            Mycompany_id = str(mycompany)
-            cash = int(Balance)
-            save_company(Mycompany_id, cash)
+                Mycompany_id = str(mycompany)
+                cash = int(Balance)
+                save_company(Mycompany_id, cash)
 
-            company = str(company)
-            cash = int(partner)
-            save_company(company, cash)
+                company = str(company)
+                cash = int(partner)
+                save_company(company, cash)
 
-            embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
-            embed.add_field(name="送金先", value=f"{company}", inline=False)
-            embed.add_field(name="金額", value=f"{amount}", inline=False)
+                embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+                embed.add_field(name="送金先", value=f"{company}", inline=False)
+                embed.add_field(name="金額", value=f"{amount}", inline=False)
 
-            await ctx.response.send_message(embed=embed)
+                await ctx.response.send_message(embed=embed)
+        else:
+            await ctx.response.send_message("残高が足りません。", ephemeral=True)
     else:
-        await ctx.response.send_message("残高が足りません。", ephemeral=True)
+        await ctx.response.send_message("0以下にはできません。", ephemeral=True)
 
 
 
-@bot.slash_command(name="c_add", description="企業に社員を追加します。", guild_ids=Debug_guild)
+@company.command(name="add", description="企業に社員を追加します。", guild_ids=Debug_guild)
 async def add_employee_command(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。"), user: discord.Member):
     company_id = str(company)
     employee_id = str(user.id)
@@ -423,6 +436,11 @@ async def add_employee_command(ctx: discord.ApplicationContext, company: discord
         await ctx.respond(f"{user.mention} が {company} の社員として追加されました。", ephemeral=True)
     else:
         await ctx.respond(f"企業 {company} が見つかりませんでした。", ephemeral=True)
+
+
+
+bot.add_application_command(company)
+
 
 
 
