@@ -312,6 +312,20 @@ async def delete(ctx: discord.ApplicationContext, user: discord.Member):
 
 
 
+@admin.command(name="log", description="nohup.outファイルを送信します。", guild_ids=main_guild)
+@commands.is_owner()
+async def log(ctx: discord.ApplicationContext):
+    await ctx.response.send_message(file=discord.File("nohup.out"), ephemeral=True)
+
+
+
+@admin.command(name="get_db", description="DBを取得します。", guild_ids=main_guild)
+@commands.is_owner()
+async def get_db(ctx: discord.ApplicationContext):
+    await ctx.response.send_message(file=discord.File("users.db"), ephemeral=True)
+
+
+
 bot.add_application_command(admin)
 
 
@@ -324,13 +338,12 @@ company = discord.SlashCommandGroup("company", "company related commands")
 
 
 @company.command(name="open", description="企業を追加します。", guild_ids=Debug_guild)
-@commands.has_permissions(administrator=True)
-async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, description="企業名を入力。"), amount: discord.Option(int, required=True, description="保存する内容を入力。"), user: discord.Member):
+async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, description="企業名を入力。")):
     company_id = str(name)
-    cash = int(amount)
+    cash = int("0")
     save_company(company_id, cash)
 
-    ceo = str(user.id)
+    ceo = str(ctx.user.id)
     await save_company_access(company_id, ceo, [])
 
     company_info = get_company_info(name)
@@ -338,7 +351,7 @@ async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, desc
     embed = discord.Embed(title="企業口座開設完了", description="ノスタルジカをご利用いただきありがとうございます。\n以下の企業口座の開設が完了しました。", color=0x38c571)
     embed.add_field(name="企業名", value=f"{name}", inline=False)
     embed.add_field(name="開設担当者", value=f"{ctx.user.mention}", inline=False)
-    embed.add_field(name="社長", value=f"{user.mention}", inline=False)
+    embed.add_field(name="社長", value=f"{ctx.user.mention}", inline=False)
     embed.add_field(name="残高", value=f"{company_info[1]}ノスタル", inline=False)
 
     await ctx.respond(embed=embed)
