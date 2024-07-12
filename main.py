@@ -339,21 +339,14 @@ async def delete(ctx: discord.ApplicationContext, reason:discord.Option(str, des
 
 
 
-    else:
-        await ctx.respond
-
-
-
-
-
-@admin.command(name="log", description="nohup.outファイルを送信します。", guild_ids=main_guild)
+@admin.command(name="log", description="nohup.outファイルを送信します。")
 @commands.is_owner()
 async def log(ctx: discord.ApplicationContext):
     await ctx.response.send_message(file=discord.File("nohup.out"), ephemeral=True)
 
 
 
-@admin.command(name="get_db", description="DBを取得します。", guild_ids=main_guild)
+@admin.command(name="get_db", description="DBを取得します。")
 @commands.is_owner()
 async def get_db(ctx: discord.ApplicationContext):
     await ctx.response.send_message(file=discord.File("users.db"), ephemeral=True)
@@ -371,7 +364,7 @@ company = discord.SlashCommandGroup("company", "company related commands")
 
 
 
-@company.command(name="open", description="企業を追加します。", guild_ids=Debug_guild)
+@company.command(name="open", description="企業を追加します。")
 async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, description="企業名を入力。")):
     company_id = str(name)
     cash = int("0")
@@ -392,7 +385,7 @@ async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, desc
 
 
 
-@company.command(name="bal", description="企業の所持金の表示", guild_ids=Debug_guild)
+@company.command(name="bal", description="企業の所持金の表示")
 async def c_bal(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
     company_info = get_company_info(company)
     user_id = str(ctx.user.id)
@@ -411,7 +404,7 @@ async def c_bal(ctx: discord.ApplicationContext, company: discord.Option(str, de
 
 
 
-@company.command(name="pay", description="企業から送金します。", guild_ids=Debug_guild)
+@company.command(name="pay", description="企業から送金します。")
 async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, description="金額を入力してください。"), mycompany: discord.Option(str, description="企業名を入力"), user: discord.Member = None, company: discord.Option(str, description="企業名を入力") = None):
     company_info = get_company_info(mycompany)
     user_id = str(ctx.user.id)
@@ -468,7 +461,7 @@ async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, des
 
 
 
-@company.command(name="add", description="企業に社員を追加します。", guild_ids=Debug_guild)
+@company.command(name="add", description="企業に社員を追加します。")
 async def add_employee_command(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。"), user: discord.Member):
     company_id = str(company)
     employee_id = str(user.id)
@@ -483,6 +476,30 @@ async def add_employee_command(ctx: discord.ApplicationContext, company: discord
         await ctx.respond(f"{user.mention} が {company} の社員として追加されました。", ephemeral=True)
     else:
         await ctx.respond(f"企業 {company} が見つかりませんでした。", ephemeral=True)
+
+
+
+@company.command(name="delete", description="企業を削除します。", guild_ids=Debug_guild)
+async def delete(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
+    company_access = await get_company_access(company_id)
+
+    ceo_id = str(ctx.user.id)
+
+    if company_access.get('ceo') != ceo_id:
+        await ctx.respond("あなたはこの企業のCEOではありません。社員を追加できません。", ephemeral=True)
+        return
+
+    company_id = str(company)
+
+    company_info = get_company_info(company_id)
+
+    if company_info:
+        c.execute(f"""DELETE FROM company WHERE id="{company}";""")
+        conn.commit()
+
+        await ctx.response.send_message(f"{company}の口座を削除しました。", ephemeral=True)
+    else:
+        await ctx.response.send_message(f"{company}の口座は存在しません。", ephemeral=True)
 
 
 
@@ -707,7 +724,7 @@ async def help(ctx: discord.ApplicationContext):
 
 
 
-@bot.slash_command(name="tra", description="取引履歴を表示します。", guild_ids=main_guild)
+@bot.slash_command(name="tra", description="取引履歴を表示します。")
 async def transaction(ctx: discord.ApplicationContext):
     data = await load_transaction_data()
     user_data = data.get(str(ctx.user.id), None)
