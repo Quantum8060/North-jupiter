@@ -208,7 +208,7 @@ async def bal(ctx: discord.ApplicationContext, user: discord.Member):
 
 
 
-@admin.command(name="bal", description="ユーザーの所持金の表示")
+@admin.command(name="c_bal", description="企業の所持金の表示")
 @commands.has_permissions(administrator=True)
 async def bal(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
     company_info = get_company_info(company)
