@@ -208,6 +208,20 @@ async def bal(ctx: discord.ApplicationContext, user: discord.Member):
 
 
 
+@admin.command(name="bal", description="ユーザーの所持金の表示")
+@commands.has_permissions(administrator=True)
+async def bal(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
+    company_info = get_company_info(company)
+    if company_info:
+        embed = discord.Embed(title="残高確認", description=f"{company}の残高を表示しています。", color=0x38c571)
+        embed.add_field(name="残高", value=f"{company_info[1]}ノスタル")
+
+        await ctx.respond(embed=embed, ephemeral=True)
+    else:
+        await ctx.respond("口座がありません。", ephemeral=True)
+
+
+
 @admin.command(name="give", description="金を付与します。")
 @commands.has_permissions(administrator=True)
 async def give(ctx: discord.ApplicationContext, user: discord.Member, amount: discord.Option(int, required=True, description="金額を入力。")):
