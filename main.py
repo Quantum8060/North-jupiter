@@ -3,7 +3,7 @@ import discord.ui
 from discord import option
 import os
 from discord.ext import commands
-from discord.ext.commands import MissingPermissions
+from discord.ext.commands import MissingAnyRole
 from time import sleep
 import aiohttp
 import json
@@ -173,7 +173,7 @@ async def is_authorized_user(user_id, company_id):
 admin = discord.SlashCommandGroup("admin", "admin related commands")
 
 @admin.command(name="open", description="口座の開設")
-@commands.has_permissions(administrator=True)
+@commands.has_any_role(962650031658250300, 1237718104918982666)
 async def open(ctx: discord.ApplicationContext, user: discord.Member, amount: discord.Option(int, required=True, description="保存する内容を入力。")):
 
     if int(amount) >= 0:
@@ -195,7 +195,7 @@ async def open(ctx: discord.ApplicationContext, user: discord.Member, amount: di
 
 
 @admin.command(name="bal", description="ユーザーの所持金の表示")
-@commands.has_permissions(administrator=True)
+@commands.has_any_role(962650031658250300, 1237718104918982666)
 async def bal(ctx: discord.ApplicationContext, user: discord.Member):
     user_info = get_user_info(user.id)
     if user_info:
@@ -209,7 +209,7 @@ async def bal(ctx: discord.ApplicationContext, user: discord.Member):
 
 
 @admin.command(name="c_bal", description="企業の所持金の表示")
-@commands.has_permissions(administrator=True)
+@commands.has_any_role(962650031658250300, 1237718104918982666)
 async def bal(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
     company_info = get_company_info(company)
     if company_info:
@@ -223,7 +223,7 @@ async def bal(ctx: discord.ApplicationContext, company: discord.Option(str, desc
 
 
 @admin.command(name="give", description="金を付与します。")
-@commands.has_permissions(administrator=True)
+@commands.has_any_role(962650031658250300, 1237718104918982666)
 async def give(ctx: discord.ApplicationContext, user: discord.Member, amount: discord.Option(int, required=True, description="金額を入力。")):
 
     user_info = get_user_info(user.id)
@@ -243,7 +243,7 @@ async def give(ctx: discord.ApplicationContext, user: discord.Member, amount: di
 
 
 @admin.command(name="help", description="管理者用helpを表示します。")
-@commands.has_permissions(administrator=True)
+@commands.has_any_role(962650031658250300, 1237718104918982666)
 async def help(ctx: discord.ApplicationContext):
     embed = discord.Embed(title="help", description="管理者用のコマンドを一覧表示しています。\n管理者用コマンドはコマンドに「admin」とついています。")
     embed.add_field(name="bal", value="```指定したユーザーの所持金を確認します。```", inline=False)
@@ -283,7 +283,7 @@ class panelView(discord.ui.View):
             await interaction.response.send_message(embed=embed)
 
 @admin.command(name="panel", description="口座開設用パネルを設置します。")
-@commands.has_permissions(administrator=True)
+@commands.has_any_role(962650031658250300, 1237718104918982666)
 async def panel(ctx: discord.ApplicationContext):
 
     embed = discord.Embed(title="口座開設パネル", description="口座開設を行う方は以下のボタンを押してください。\n \n注意！\n現時点では口座開設済みの方が押すと口座情報がリセットされます。")
@@ -293,7 +293,7 @@ async def panel(ctx: discord.ApplicationContext):
 
 
 @admin.command(name="tra", description="取引履歴を表示します。")
-@commands.has_permissions(administrator=True)
+@commands.has_any_role(962650031658250300, 1237718104918982666)
 async def transaction(ctx, user: discord.Member):
     data = await load_transaction_data()
     user_data = data.get(str(user.id), None)
@@ -493,13 +493,16 @@ async def delete(ctx: discord.ApplicationContext, company: discord.Option(str, d
 
     company_info = get_company_info(company_id)
 
-    if company_info:
-        c.execute(f"""DELETE FROM company WHERE id="{company}";""")
-        conn.commit()
+    if int(company_info[1]) > int(0):
+        if company_info:
+            c.execute(f"""DELETE FROM company WHERE id="{company}";""")
+            conn.commit()
 
-        await ctx.response.send_message(f"{company}の口座を削除しました。", ephemeral=True)
+            await ctx.response.send_message(f"{company}の口座を削除しました。", ephemeral=True)
+        else:
+            await ctx.response.send_message(f"{company}の口座は存在しません。", ephemeral=True)
     else:
-        await ctx.response.send_message(f"{company}の口座は存在しません。", ephemeral=True)
+        await ctx.response.send_message("削除する口座に残高が残っています。!", ephemeral=True)
 
 
 

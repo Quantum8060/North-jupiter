@@ -29,7 +29,7 @@ class dm(commands.Cog):
         self.bot = bot
 
     @discord.slash_command(name="dm", description="指定したユーザーにDMを送信します。")
-    @commands.is_owner()
+    @commands.has_any_role(962650031658250300, 1237718104918982666)
     async def dm(self, interaction: discord.ApplicationContext):
 
         modal = dmModal(title="DM送信用フォーム")
