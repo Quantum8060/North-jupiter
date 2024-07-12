@@ -481,7 +481,7 @@ async def add_employee_command(ctx: discord.ApplicationContext, company: discord
 
 @company.command(name="delete", description="企業を削除します。", guild_ids=Debug_guild)
 async def delete(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
-    company_access = await get_company_access(company_id)
+    company_access = await get_company_access(company)
 
     ceo_id = str(ctx.user.id)
 
