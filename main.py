@@ -294,21 +294,41 @@ async def transaction(ctx, user: discord.Member):
 
 
 
-@admin.command(name="delete", description="口座を削除します。", guild_ids=main_guild)
+@admin.command(name="delete", description="口座を削除します。")
 @commands.is_owner()
-async def delete(ctx: discord.ApplicationContext, user: discord.Member):
+async def delete(ctx: discord.ApplicationContext, reason:discord.Option(str, description="理由を入力してください。"), user: discord.Member = None, company: discord.Option(discord.SlashCommandOptionType.string, description="企業名を入力してください。") = None):
 
-    user_id = str(user.id)
+    if reason and user:
+        user_id = str(user.id)
 
-    user_info = get_user_info(user_id)
+        user_info = get_user_info(user_id)
 
-    if user_info:
-        c.execute(f"""DELETE FROM users WHERE id="{user.id}";""")
-        conn.commit()
+        if user_info:
+            c.execute(f"""DELETE FROM users WHERE id="{user.id}";""")
+            conn.commit()
 
-        await ctx.response.send_message(f"{user.mention}のデータを削除しました。", ephemeral=True)
+            await ctx.response.send_message(f"{user.mention}のデータを削除しました。", ephemeral=True)
+        else:
+            await ctx.response.send_message(f"{user.mention}の口座は存在しません。", ephemeral=True)
+    elif reason and company:
+        company_id = str(company)
+
+        company_info = get_company_info(company_id)
+
+        if company_info:
+            c.execute(f"""DELETE FROM company WHERE id="{company}";""")
+            conn.commit()
+
+            await ctx.response.send_message(f"{company}のデータを削除しました。", ephemeral=True)
+        else:
+            await ctx.response.send_message(f"{company}のデータは存在しません。", ephemeral=True)
+
+
+
     else:
-        await ctx.response.send_message(f"{user.mention}の口座は存在しません。", ephemeral=True)
+        await ctx.respond
+
+
 
 
 
