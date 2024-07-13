@@ -775,7 +775,7 @@ async def math(ctx: discord.ApplicationContext, money: discord.Option(int, descr
 
     dept = int(money * (1.0005 ** td.days))
 
-    await ctx.response.send_message(f"返済額は{dept}ノスタルです。", ephemeral=True)
+    await ctx.response.send_message(f"返済必要額は{dept}ノスタルです。", ephemeral=True)
 
 
 
