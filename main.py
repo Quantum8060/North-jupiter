@@ -506,6 +506,21 @@ async def delete(ctx: discord.ApplicationContext, company: discord.Option(str, d
 
 
 
+@company.command(name="search", description="企業の口座が存在するか確認します。")
+async def search(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
+
+    company_info = get_company_info(company)
+    if company_info:
+
+        embed = discord.Embed(title="口座確認", description=f"{company}の口座は存在します。", color=0x38c571)
+
+        await ctx.response.send_message(embed=embed, ephemeral=True)
+    else:
+        embed = discord.Embed(title="口座確認", description=f"{company}の口座は存在しません。", color=0xff0000)
+        await ctx.response.send_message(embed=embed, ephemeral=True)
+
+
+
 bot.add_application_command(company)
 
 
