@@ -14,7 +14,7 @@ import random
 import string
 from dotenv import load_dotenv
 import sqlite3
-from datetime import datetime
+from datetime import datetime, date
 import pytz
 import aiofiles
 import toml
@@ -763,6 +763,19 @@ async def info(ctx: discord.ApplicationContext):
 async def leave(ctx: discord.ApplicationContext):
     await ctx.respond("サーバーから退出します。")
     await ctx.guild.leave()
+
+
+
+@bot.slash_command(name="math", description="空色財閥用コマンド", guild_ids=main_guild)
+async def math(ctx: discord.ApplicationContext, money: discord.Option(int, description="借りた金額を入力してください。"), year:discord.Option(int, description="借りた年を入力してください。"), month: discord.Option(int, description="借りた月を入力してください。"), day: discord.Option(int, description="借りた日付けを入力してください。")):
+    dt1 = datetime.now()
+    dt2 = date(year=year, month=month, day=day)
+
+    td = dt1.date() - dt2
+
+    dept = int(money * (1.0005 ** td.days))
+
+    await ctx.response.send_message(f"返済額は{dept}ノスタルです。", ephemeral=True)
 
 
 
