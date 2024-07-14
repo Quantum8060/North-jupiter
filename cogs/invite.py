@@ -22,7 +22,7 @@ class inviteModal(discord.ui.Modal):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        self.add_item(discord.ui.InputText(label="タイトルを入力してください。", style=discord.InputTextStyle.short))
+        self.add_item(discord.ui.InputText(label="招待リンクを入力してください。", style=discord.InputTextStyle.short))
 
     async def callback(self, interaction: discord.ApplicationContext):
 
