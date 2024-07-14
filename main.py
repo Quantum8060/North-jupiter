@@ -33,8 +33,8 @@ TOKEN = config_ini["MAIN"]["TOKEN"]
 
 bot = discord.Bot(intents=intents)
 bot.webhooks = {}
-Debug_guild = [1235247721934360577]
-main_guild = [962647934695002173, 1235247721934360577]
+Debug_guild = [1235247721934360577, 1256021750756544632]
+main_guild = [962647934695002173, 1235247721934360577, 1256021750756544632]
 
 global result
 result = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
@@ -173,8 +173,9 @@ async def is_authorized_user(user_id, company_id):
 admin = discord.SlashCommandGroup("admin", "admin related commands")
 
 @admin.command(name="open", description="口座の開設")
-@commands.has_any_role(962650031658250300, 1237718104918982666)
+@commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def open(ctx: discord.ApplicationContext, user: discord.Member, amount: discord.Option(int, required=True, description="保存する内容を入力。")):
+
 
     if int(amount) >= 0:
         user_id = str(user.id)
@@ -189,13 +190,15 @@ async def open(ctx: discord.ApplicationContext, user: discord.Member, amount: di
         embed.add_field(name="残高", value=f"{user_info[1]}ノスタル", inline=False)
 
         await ctx.respond(embed=embed)
+        log_c = await bot.fetch_channel("1262092921964986509")
+        await log_c.send(f"openコマンド使用\nuser:{ctx.user.name}")
     else:
         await ctx.respond("0以下にはできません。", ephemeral=True)
 
 
 
 @admin.command(name="bal", description="ユーザーの所持金の表示")
-@commands.has_any_role(962650031658250300, 1237718104918982666)
+@commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def bal(ctx: discord.ApplicationContext, user: discord.Member):
     user_info = get_user_info(user.id)
     if user_info:
@@ -203,13 +206,15 @@ async def bal(ctx: discord.ApplicationContext, user: discord.Member):
         embed.add_field(name="残高", value=f"{user_info[1]}ノスタル")
 
         await ctx.respond(embed=embed, ephemeral=True)
+        log_c = await bot.fetch_channel("1262092999161286656")
+        await log_c.send(f"balコマンド使用\nuser:{ctx.user.name}")
     else:
         await ctx.respond("口座がありません。", ephemeral=True)
 
 
 
 @admin.command(name="c_bal", description="企業の所持金の表示")
-@commands.has_any_role(962650031658250300, 1237718104918982666)
+@commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def bal(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
     company_info = get_company_info(company)
     if company_info:
@@ -217,13 +222,15 @@ async def bal(ctx: discord.ApplicationContext, company: discord.Option(str, desc
         embed.add_field(name="残高", value=f"{company_info[1]}ノスタル")
 
         await ctx.respond(embed=embed, ephemeral=True)
+        log_c = await bot.fetch_channel("1262100440506564608")
+        await log_c.send(f"c_balコマンド使用\nuser:{ctx.user.name}")
     else:
         await ctx.respond("口座がありません。", ephemeral=True)
 
 
 
 @admin.command(name="give", description="金を付与します。")
-@commands.has_any_role(962650031658250300, 1237718104918982666)
+@commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def give(ctx: discord.ApplicationContext, user: discord.Member, amount: discord.Option(int, required=True, description="金額を入力。")):
 
     user_info = get_user_info(user.id)
@@ -237,13 +244,15 @@ async def give(ctx: discord.ApplicationContext, user: discord.Member, amount: di
         embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
 
         await ctx.response.send_message(embed=embed)
+        log_c = await bot.fetch_channel("1262093090316091543")
+        await log_c.send(f"giveコマンド使用\nuser:{ctx.user.name}")
     else:
         await ctx.respond("所持金を0以下にすることはできません。", ephemeral=True)
 
 
 
 @admin.command(name="help", description="管理者用helpを表示します。")
-@commands.has_any_role(962650031658250300, 1237718104918982666)
+@commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def help(ctx: discord.ApplicationContext):
     embed = discord.Embed(title="help", description="管理者用のコマンドを一覧表示しています。\n管理者用コマンドはコマンドに「admin」とついています。")
     embed.add_field(name="bal", value="```指定したユーザーの所持金を確認します。```", inline=False)
@@ -285,17 +294,19 @@ class panelView(discord.ui.View):
             await interaction.response.send_message(embed=embed)
 
 @admin.command(name="panel", description="口座開設用パネルを設置します。")
-@commands.has_any_role(962650031658250300, 1237718104918982666)
+@commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def panel(ctx: discord.ApplicationContext):
 
     embed = discord.Embed(title="口座開設パネル", description="口座開設を行う方は以下のボタンを押してください。\n \n注意！\n現時点では口座開設済みの方が押すと口座情報がリセットされます。")
 
     await ctx.response.send_message(embed=embed, view=panelView())
+    log_c = await bot.fetch_channel("1262093173518499842")
+    await log_c.send(f"panelコマンド使用\nuser:{ctx.user.name}")
 
 
 
 @admin.command(name="tra", description="取引履歴を表示します。")
-@commands.has_any_role(962650031658250300, 1237718104918982666)
+@commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def transaction(ctx, user: discord.Member):
     data = await load_transaction_data()
     user_data = data.get(str(user.id), None)
@@ -304,6 +315,8 @@ async def transaction(ctx, user: discord.Member):
         for entry in user_data:
             embed.add_field(name=entry['timestamp'], value=f"金額: {entry['amount']}", inline=False)
         await ctx.respond(embed=embed, ephemeral=True)
+        log_c = await bot.fetch_channel("1262093150638571614")
+        await log_c.send(f"traコマンド使用\nuser:{ctx.user.name}")
     else:
         embed = discord.Embed(title="データなし", description=f"{ctx.user.mention}の取引履歴は存在しません。", color=0xff0000)
         await ctx.respond(embed=embed, ephemeral=True)
@@ -389,6 +402,8 @@ async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, desc
         embed.add_field(name="社長", value=f"{ctx.user.mention}", inline=False)
 
         await ctx.respond(embed=embed)
+        log_c = await bot.fetch_channel("1262101253752881229")
+        await log_c.send(f"openコマンド使用\nuser:{ctx.user.name}")
 
 
 
@@ -406,6 +421,8 @@ async def c_bal(ctx: discord.ApplicationContext, company: discord.Option(str, de
         embed.add_field(name="残高", value=f"{company_info[1]}ノスタル")
 
         await ctx.respond(embed=embed, ephemeral=True)
+        log_c = await bot.fetch_channel("1262101272014622790")
+        await log_c.send(f"balコマンド使用\nuser:{ctx.user.name}")
     else:
         await ctx.respond("口座がありません。", ephemeral=True)
 
@@ -441,6 +458,8 @@ async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, des
                 embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
 
                 await ctx.response.send_message(embed=embed)
+                log_c = await bot.fetch_channel("1262101376591466557")
+                await log_c.send(f"payコマンド使用\nuser:{ctx.user.name}")
             elif amount and mycompany and company:
                 company_info = get_company_info(mycompany)
                 Balance = int(company_info[1]) - amount
@@ -461,6 +480,8 @@ async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, des
                 embed.add_field(name="金額", value=f"{amount}", inline=False)
 
                 await ctx.response.send_message(embed=embed)
+                log_c = await bot.fetch_channel("1262101376591466557")
+                await log_c.send(f"payコマンド使用\nuser:{ctx.user.name}")
         else:
             await ctx.response.send_message("残高が足りません。", ephemeral=True)
     else:
@@ -481,6 +502,8 @@ async def add_employee_command(ctx: discord.ApplicationContext, company: discord
 
     if await add_employee(company_id, employee_id):
         await ctx.respond(f"{user.mention} が {company} の社員として追加されました。", ephemeral=True)
+        log_c = await bot.fetch_channel("1262101352499384320")
+        await log_c.send(f"addコマンド使用\nuser:{ctx.user.name}")
     else:
         await ctx.respond(f"企業 {company} が見つかりませんでした。", ephemeral=True)
 
@@ -506,6 +529,8 @@ async def delete(ctx: discord.ApplicationContext, company: discord.Option(str, d
             conn.commit()
 
             await ctx.response.send_message(f"{company}の口座を削除しました。", ephemeral=True)
+            log_c = await bot.fetch_channel("1262101293376475188")
+            await log_c.send(f"deleteコマンド使用\nuser:{ctx.user.name}")
         else:
             await ctx.response.send_message(f"{company}の口座は存在しません。", ephemeral=True)
     else:
