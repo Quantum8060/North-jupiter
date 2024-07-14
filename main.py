@@ -366,22 +366,27 @@ company = discord.SlashCommandGroup("company", "company related commands")
 
 @company.command(name="open", description="企業を追加します。")
 async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, description="企業名を入力。")):
-    company_id = str(name)
-    cash = int("0")
-    save_company(company_id, cash)
-
-    ceo = str(ctx.user.id)
-    await save_company_access(company_id, ceo, [])
 
     company_info = get_company_info(name)
 
-    embed = discord.Embed(title="企業口座開設完了", description="ノスタルジカをご利用いただきありがとうございます。\n以下の企業口座の開設が完了しました。", color=0x38c571)
-    embed.add_field(name="企業名", value=f"{name}", inline=False)
-    embed.add_field(name="開設担当者", value=f"{ctx.user.mention}", inline=False)
-    embed.add_field(name="社長", value=f"{ctx.user.mention}", inline=False)
-    embed.add_field(name="残高", value=f"{company_info[1]}ノスタル", inline=False)
+    if company_info:
+        embed = discord.Embed(title="エラー", description=f"{name}の口座はすでに存在しています。", color=0xff0000)
+        await ctx.response.send_message(embed=embed, ephemeral=True)
+    else:
+        company_id = str(name)
+        cash = int("0")
+        save_company(company_id, cash)
 
-    await ctx.respond(embed=embed)
+        ceo = str(ctx.user.id)
+        await save_company_access(company_id, ceo, [])
+
+        company_info = get_company_info(name)
+
+        embed = discord.Embed(title="企業口座開設完了", description="ノスタルジカをご利用いただきありがとうございます。\n以下の企業口座の開設が完了しました。", color=0x38c571)
+        embed.add_field(name="企業名", value=f"{name}", inline=False)
+        embed.add_field(name="社長", value=f"{ctx.user.mention}", inline=False)
+
+        await ctx.respond(embed=embed)
 
 
 
