@@ -247,10 +247,12 @@ async def give(ctx: discord.ApplicationContext, user: discord.Member, amount: di
 async def help(ctx: discord.ApplicationContext):
     embed = discord.Embed(title="help", description="管理者用のコマンドを一覧表示しています。\n管理者用コマンドはコマンドに「admin」とついています。")
     embed.add_field(name="bal", value="```指定したユーザーの所持金を確認します。```", inline=False)
+    embed.add_field(name="c_bal", value="```指定した企業の所持金を確認できます。```", inline=False)
     embed.add_field(name="give", value="```指定したユーザーに振り込みます。```", inline=False)
     embed.add_field(name="help", value="```このhelpを表示します。```", inline=False)
     embed.add_field(name="open", value="```指定したユーザーの口座を開設します。```", inline=False)
     embed.add_field(name="panel", value="```口座開設用パネルを設置します。```", inline=False)
+    embed.add_field(name="tra", value="```指定したユーザーの送金履歴を確認します。```", inline=False)
 
     await ctx.response.send_message(embed=embed, ephemeral=True)
 
@@ -526,6 +528,21 @@ async def search(ctx: discord.ApplicationContext, company: discord.Option(str, d
 
 
 
+@company.command(name="help", description="企業用helpを表示します。")
+async def help(ctx: discord.ApplicationContext):
+    embed = discord.Embed(title="help", description="企業用のコマンドを一覧表示しています。\n企業用コマンドはコマンドに「company」とついています。")
+    embed.add_field(name="add", value="```企業に口座を操作可能なユーザーを登録します。\n登録は社長のみ可能です。```", inline=False)
+    embed.add_field(name="bal", value="```指定した企業の所持金を確認します。\n自分が所属している企業のみ確認可能です。```", inline=False)
+    embed.add_field(name="delete", value="```指定した企業の口座を削除します。\n企業の削除は社長のみ可能です。```", inline=False)
+    embed.add_field(name="help", value="```このhelpを表示します。```", inline=False)
+    embed.add_field(name="open", value="```企業口座を開設します。\nコマンドを実行したユーザーが社長になります。```", inline=False)
+    embed.add_field(name="pay", value="```企業口座から別の企業・ユーザーに送金します。```", inline=False)
+    embed.add_field(name="search", value="```指定した企業の口座が存在するか確認します。```", inline=False)
+
+    await ctx.response.send_message(embed=embed, ephemeral=True)
+
+
+
 bot.add_application_command(company)
 
 
@@ -739,6 +756,7 @@ async def help(ctx: discord.ApplicationContext):
     embed.add_field(name="bal", value="```所持金を確認します。```", inline=False)
     embed.add_field(name="help", value="```helpを表示します。```", inline=False)
     embed.add_field(name="info", value="```ノスタルへの交換レートを表示します。```", inline=False)
+    embed.add_field(name="math", value="空色財閥銀行から借金した場合に返済必要額の計算ができます。", inline=False)
     embed.add_field(name="pay", value="```この指定したユーザーに支払いを行います。```", inline=False)
     embed.add_field(name="search", value="```指定したユーザーの口座が存在するか確認します。```", inline=False)
     embed.add_field(name="tra", value="```送金履歴を確認します。\n※今後のアップデートで入金履歴も確認できるようになります！```", inline=False)
