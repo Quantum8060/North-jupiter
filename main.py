@@ -516,7 +516,7 @@ async def delete(ctx: discord.ApplicationContext, company: discord.Option(str, d
     ceo_id = str(ctx.user.id)
 
     if company_access.get('ceo') != ceo_id:
-        await ctx.respond("あなたはこの企業のCEOではありません。社員を追加できません。", ephemeral=True)
+        await ctx.respond("あなたはこの企業のCEOではありません。企業を解体できません。", ephemeral=True)
         return
 
     company_id = str(company)
@@ -524,6 +524,8 @@ async def delete(ctx: discord.ApplicationContext, company: discord.Option(str, d
     company_info = get_company_info(company_id)
 
     if int(company_info[1]) > int(0):
+        await ctx.response.send_message("削除する口座に残高が残っています。!", ephemeral=True)
+    else:
         if company_info:
             c.execute(f"""DELETE FROM company WHERE id="{company}";""")
             conn.commit()
@@ -533,8 +535,6 @@ async def delete(ctx: discord.ApplicationContext, company: discord.Option(str, d
             await log_c.send(f"deleteコマンド使用\nuser:{ctx.user.name}")
         else:
             await ctx.response.send_message(f"{company}の口座は存在しません。", ephemeral=True)
-    else:
-        await ctx.response.send_message("削除する口座に残高が残っています。!", ephemeral=True)
 
 
 
