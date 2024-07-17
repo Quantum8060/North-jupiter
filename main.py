@@ -455,6 +455,7 @@ async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, des
 
                 embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
                 embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
+                embed.add_field(name="送金元", value=f"{mycompany}", inline=False)
                 embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
 
                 await ctx.response.send_message(embed=embed)
@@ -477,6 +478,7 @@ async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, des
 
                 embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
                 embed.add_field(name="送金先", value=f"{company}", inline=False)
+                embed.add_field(name="送金元", value=f"{mycompany}", inline=False)
                 embed.add_field(name="金額", value=f"{amount}", inline=False)
 
                 await ctx.response.send_message(embed=embed)
@@ -503,7 +505,7 @@ async def add_employee_command(ctx: discord.ApplicationContext, company: discord
     if await add_employee(company_id, employee_id):
         await ctx.respond(f"{user.mention} が {company} の社員として追加されました。", ephemeral=True)
         log_c = await bot.fetch_channel("1262101352499384320")
-        await log_c.send(f"addコマンド使用\nuser:{ctx.user.name}")
+        await log_c.send(f"addコマンド使用\nuser:{ctx.user.name}\nadd:{user.name}")
     else:
         await ctx.respond(f"企業 {company} が見つかりませんでした。", ephemeral=True)
 
@@ -645,6 +647,7 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
 
                 embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
                 embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
+                embed.add_field(name="送金元", value=f"{ctx.user.display_name}")
                 embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
                 embed.add_field(name="取引内容", value=f"{reason}", inline=False)
 
@@ -666,6 +669,7 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
 
                 embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
                 embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
+                embed.add_field(name="送金元", value=f"{ctx.user.display_name}")
                 embed.add_field(name="金額", value=f"{amount}", inline=False)
 
                 user_data = {
@@ -711,6 +715,7 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
 
                 embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
                 embed.add_field(name="送金先", value=f"{company}", inline=False)
+                embed.add_field(name="送金元", value=f"{ctx.user.display_name}")
                 embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
                 embed.add_field(name="取引内容", value=f"{reason}", inline=False)
 
@@ -732,6 +737,7 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
 
                 embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
                 embed.add_field(name="送金先", value=f"{company}", inline=False)
+                embed.add_field(name="送金元", value=f"{ctx.user.display_name}")
                 embed.add_field(name="金額", value=f"{amount}", inline=False)
 
                 user_data = {
