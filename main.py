@@ -647,7 +647,7 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
 
                 embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
                 embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
-                embed.add_field(name="送金元", value=f"{ctx.user.display_name}")
+                embed.add_field(name="送金元", value=f"{ctx.user.mention}")
                 embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
                 embed.add_field(name="取引内容", value=f"{reason}", inline=False)
 
@@ -669,7 +669,7 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
 
                 embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
                 embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
-                embed.add_field(name="送金元", value=f"{ctx.user.display_name}")
+                embed.add_field(name="送金元", value=f"{ctx.user.mention}")
                 embed.add_field(name="金額", value=f"{amount}", inline=False)
 
                 user_data = {
@@ -715,7 +715,7 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
 
                 embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
                 embed.add_field(name="送金先", value=f"{company}", inline=False)
-                embed.add_field(name="送金元", value=f"{ctx.user.display_name}")
+                embed.add_field(name="送金元", value=f"{ctx.user.mention}")
                 embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
                 embed.add_field(name="取引内容", value=f"{reason}", inline=False)
 
@@ -737,7 +737,7 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
 
                 embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
                 embed.add_field(name="送金先", value=f"{company}", inline=False)
-                embed.add_field(name="送金元", value=f"{ctx.user.display_name}")
+                embed.add_field(name="送金元", value=f"{ctx.user.mention}")
                 embed.add_field(name="金額", value=f"{amount}", inline=False)
 
                 user_data = {
