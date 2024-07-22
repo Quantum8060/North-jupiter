@@ -819,6 +819,7 @@ async def math(ctx: discord.ApplicationContext, money: discord.Option(int, descr
 
 #cogs登録
 cogs_list = [
+    'anonymous',
     'clear',
     'ping',
     'invite',
