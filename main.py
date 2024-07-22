@@ -172,7 +172,7 @@ async def is_authorized_user(user_id, company_id):
 
 admin = discord.SlashCommandGroup("admin", "admin related commands")
 
-@admin.command(name="open", description="口座の開設")
+@admin.command(name="open", description="口座の開設", guild_ids=main_guild)
 @commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def open(ctx: discord.ApplicationContext, user: discord.Member, amount: discord.Option(int, required=True, description="保存する内容を入力。")):
 
@@ -197,7 +197,7 @@ async def open(ctx: discord.ApplicationContext, user: discord.Member, amount: di
 
 
 
-@admin.command(name="bal", description="ユーザーの所持金の表示")
+@admin.command(name="bal", description="ユーザーの所持金の表示", guild_ids=main_guild)
 @commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def bal(ctx: discord.ApplicationContext, user: discord.Member):
     user_info = get_user_info(user.id)
@@ -213,7 +213,7 @@ async def bal(ctx: discord.ApplicationContext, user: discord.Member):
 
 
 
-@admin.command(name="c_bal", description="企業の所持金の表示")
+@admin.command(name="c_bal", description="企業の所持金の表示", guild_ids=main_guild)
 @commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def bal(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
     company_info = get_company_info(company)
@@ -229,7 +229,7 @@ async def bal(ctx: discord.ApplicationContext, company: discord.Option(str, desc
 
 
 
-@admin.command(name="give", description="金を付与します。")
+@admin.command(name="give", description="金を付与します。", guild_ids=main_guild)
 @commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def give(ctx: discord.ApplicationContext, user: discord.Member, amount: discord.Option(int, required=True, description="金額を入力。")):
 
@@ -277,7 +277,7 @@ class panelView(discord.ui.View):
 
             await interaction.response.send_message(embed=embed)
 
-@admin.command(name="panel", description="口座開設用パネルを設置します。")
+@admin.command(name="panel", description="口座開設用パネルを設置します。", guild_ids=main_guild)
 @commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def panel(ctx: discord.ApplicationContext):
 
@@ -289,7 +289,7 @@ async def panel(ctx: discord.ApplicationContext):
 
 
 
-@admin.command(name="tra", description="取引履歴を表示します。")
+@admin.command(name="tra", description="取引履歴を表示します。", guild_ids=main_guild)
 @commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def transaction(ctx, user: discord.Member):
     data = await load_transaction_data()
@@ -363,7 +363,7 @@ company = discord.SlashCommandGroup("company", "company related commands")
 
 
 
-@company.command(name="open", description="企業を追加します。")
+@company.command(name="open", description="企業を追加します。", guild_ids=main_guild)
 async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, description="企業名を入力。")):
 
     company_info = get_company_info(name)
@@ -391,7 +391,7 @@ async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, desc
 
 
 
-@company.command(name="bal", description="企業の所持金の表示")
+@company.command(name="bal", description="企業の所持金の表示", guild_ids=main_guild)
 async def c_bal(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
     company_info = get_company_info(company)
     user_id = str(ctx.user.id)
@@ -412,7 +412,7 @@ async def c_bal(ctx: discord.ApplicationContext, company: discord.Option(str, de
 
 
 
-@company.command(name="pay", description="企業から送金します。")
+@company.command(name="pay", description="企業から送金します。", guild_ids=main_guild)
 async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, description="金額を入力してください。"), mycompany: discord.Option(str, description="企業名を入力"), user: discord.Member = None, company: discord.Option(str, description="企業名を入力") = None):
     company_info = get_company_info(mycompany)
     user_id = str(ctx.user.id)
@@ -475,7 +475,7 @@ async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, des
 
 
 
-@company.command(name="add", description="企業に社員を追加します。")
+@company.command(name="add", description="企業に社員を追加します。", guild_ids=main_guild)
 async def add_employee_command(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。"), user: discord.Member):
     company_id = str(company)
     employee_id = str(user.id)
@@ -495,7 +495,7 @@ async def add_employee_command(ctx: discord.ApplicationContext, company: discord
 
 
 
-@company.command(name="delete", description="企業を削除します。", guild_ids=Debug_guild)
+@company.command(name="delete", description="企業を削除します。", guild_ids=main_guild)
 async def delete(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
     company_access = await get_company_access(company)
 
@@ -524,7 +524,7 @@ async def delete(ctx: discord.ApplicationContext, company: discord.Option(str, d
 
 
 
-@company.command(name="search", description="企業の口座が存在するか確認します。")
+@company.command(name="search", description="企業の口座が存在するか確認します。", guild_ids=main_guild)
 async def search(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
 
     company_info = get_company_info(company)
@@ -546,7 +546,7 @@ bot.add_application_command(company)
 
 
 
-@bot.slash_command(name="bal", description="自分の所持金の表示")
+@bot.slash_command(name="bal", description="自分の所持金の表示", guild_ids=main_guild)
 async def bal(ctx: discord.ApplicationContext):
     user_info = get_user_info(ctx.user.id)
 
@@ -579,7 +579,7 @@ async def u_bal(ctx, user: discord.Member):
 
 
 
-@bot.slash_command(name="pay", description="送金します。")
+@bot.slash_command(name="pay", description="送金します。", guild_ids=main_guild)
 async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, description="送金する金額を記入"), user: discord.Member = None, company: discord.Option(discord.SlashCommandOptionType.string, description="企業を入力してください") =None , reason: discord.Option(discord.SlashCommandOptionType.string, description="取引内容を入力") =None):
 
     user_info = get_user_info(ctx.user.id)
@@ -735,7 +735,7 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
 
 
 
-@bot.slash_command(name="search", description="口座が存在するか確認します。")
+@bot.slash_command(name="search", description="口座が存在するか確認します。", guild_ids=main_guild)
 async def search(ctx: discord.ApplicationContext, user: discord.Member):
 
     user_info = get_user_info(user.id)
@@ -750,22 +750,7 @@ async def search(ctx: discord.ApplicationContext, user: discord.Member):
 
 
 
-@bot.slash_command(name="help", description="helpを表示します。")
-async def help(ctx: discord.ApplicationContext):
-    embed = discord.Embed(title="help", description="一般のユーザー用のコマンドを一覧表示しています。\nすべてのコマンドはスラッシュコマンドです。/を入力して出てくるコマンドを実行してください。")
-    embed.add_field(name="bal", value="```所持金を確認します。```", inline=False)
-    embed.add_field(name="help", value="```helpを表示します。```", inline=False)
-    embed.add_field(name="info", value="```ノスタルへの交換レートを表示します。```", inline=False)
-    embed.add_field(name="math", value="空色財閥銀行から借金した場合に返済必要額の計算ができます。", inline=False)
-    embed.add_field(name="pay", value="```この指定したユーザーに支払いを行います。```", inline=False)
-    embed.add_field(name="search", value="```指定したユーザーの口座が存在するか確認します。```", inline=False)
-    embed.add_field(name="tra", value="```送金履歴を確認します。\n※今後のアップデートで入金履歴も確認できるようになります！```", inline=False)
-
-    await ctx.response.send_message(embed=embed, ephemeral=True)
-
-
-
-@bot.slash_command(name="tra", description="取引履歴を表示します。")
+@bot.slash_command(name="tra", description="取引履歴を表示します。", guild_ids=main_guild)
 async def transaction(ctx: discord.ApplicationContext):
     data = await load_transaction_data()
     user_data = data.get(str(ctx.user.id), None)
@@ -780,7 +765,7 @@ async def transaction(ctx: discord.ApplicationContext):
 
 
 
-@bot.slash_command(name="info", description="ノスタルへの交換レートを表示します。")
+@bot.slash_command(name="info", description="ノスタルへの交換レートを表示します。", guild_ids=main_guild)
 async def info(ctx: discord.ApplicationContext):
 
     embed = discord.Embed(title="交換レート", description="以下のアイテムをノスタルに交換できます。\n交換を希望する方は <@!1009494490526007336> に連絡してください。", color=0x38c571)
