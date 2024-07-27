@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 import discord.ui
 import json
-import aiohttp
 
 Debug_guild = [1235247721934360577]
 main_guild = [962647934695002173, 1235247721934360577]
@@ -21,24 +20,16 @@ class EmbedModal(discord.ui.Modal):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        self.add_item(discord.ui.InputText(label="埋め込むメッセージを入力してください。", style=discord.InputTextStyle.long))
-
+        self.add_item(discord.ui.InputText(label="内容を入力してください。", style=discord.InputTextStyle.long))
 
     async def callback(self, interaction: discord.Interaction):
 
+
         embed = discord.Embed(description=self.children[0].value, color=0xf1c40f)
         embed.add_field(name="", value="")
-
-        async with aiohttp.ClientSession() as session:
-
-            avatar = await interaction.user.avatar.read()
-
-            webhook = await interaction.channel.create_webhook(name=f"{interaction.user.display_name}", avatar=avatar)
-
-        await webhook.send(embed=embed)
+        embed.set_author(icon_url=interaction.user.avatar.url, name=f"{interaction.user.display_name}")
+        await interaction.channel.send(embeds=[embed])
         await interaction.response.send_message("送信しました。", ephemeral=True)
-        await webhook.delete()
-
 
 class embed(commands.Cog):
 
