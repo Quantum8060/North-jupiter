@@ -812,6 +812,38 @@ async def timeout(ctx: discord.ApplicationContext, user: discord.Member, minutes
     await ctx.respond(f"{user.mention}を{minutes}分間タイムアウトしました。", ephemeral=True)
 
 
+
+@bot.message_command(name="メッセージを通報", guild_ids=Debug_guild)
+async def userinfo_c(ctx, message: discord.Message):
+    global message_c, message_u
+    message_c = message.content
+    message_u = message.author
+
+    modal = reportModal(title="通報内容を入力")
+    await ctx.send_modal(modal)
+    await ctx.respond("フォームでの入力を待機しています…", ephemeral=True)
+
+class reportModal(discord.ui.Modal):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.add_item(discord.ui.InputText(label="内容を入力してください。", style=discord.InputTextStyle.long))
+
+    async def callback(self, interaction: discord.Interaction):
+
+        embed = discord.Embed(title="通報サービス", description="以下の通報を受け取りました。")
+        embed.add_field(name="メッセージ送信者", value=message_u, inline=False)
+        embed.add_field(name="通報するメッセージ", value=message_c, inline=False)
+        embed.add_field(name="通報者", value=interaction.user.display_name, inline=False)
+        embed.add_field(name="理由", value=self.children[0].value, inline=False)
+
+        report_c = await bot.fetch_channel("1266640534404075570")
+
+        await report_c.send(embed=embed)
+        await interaction.respond(f"以下のメッセージを通報しました。\n```{message_c}```\n※通報に際して管理者から連絡が来る可能性があります。", ephemeral=True)
+
+
+
 #cogs登録
 cogs_list = [
     'anonymous',
@@ -825,6 +857,7 @@ cogs_list = [
     'random',
     'stop',
     'tasks',
+    'report',
 ]
 
 for cog in cogs_list:
