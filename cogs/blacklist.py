@@ -4,6 +4,7 @@ from discord.commands import SlashCommandGroup
 import json
 
 Debug_guild = [1235247721934360577]
+main_guild = [962647934695002173, 1235247721934360577, 1256021750756544632]
 
 blacklist_file = 'blacklist.json'
 
@@ -24,7 +25,7 @@ class blacklist(commands.Cog):
 
     blacklists = SlashCommandGroup("blacklist", "ブラックリストグループ")
 
-    @blacklists.command(name="add", description="ユーザーをブラックリストに追加します。", guild_ids=Debug_guild)
+    @blacklists.command(name="add", description="ユーザーをブラックリストに追加します。", guild_ids=main_guild)
     @commands.is_owner()
     async def a_blacklist(self, interaction: discord.ApplicationContext, user:discord.Member, reason: discord.Option(str, description="理由を入力します。")):
         b_id = str(interaction.author.id)
@@ -47,7 +48,7 @@ class blacklist(commands.Cog):
         else:
             await interaction.response.send_message("あなたはブラックリストに登録されています。", ephemeral=True)
 
-    @blacklists.command(name="show", description="ブラックリストを一覧表示します。")
+    @blacklists.command(name="show", description="ブラックリストを一覧表示します。", guild_ids=main_guild)
     @commands.is_owner()
     async def s_blacklist(self, interaction: discord.ApplicationContext):
         b_id = str(interaction.author.id)
@@ -71,6 +72,26 @@ class blacklist(commands.Cog):
         embed.add_field(name="ブラックリストユーザーの一覧です。", value=user_info, inline=False)
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @blacklists.command(name="remove", description="ブラックリストからユーザーを削除します。", guild_ids=main_guild)
+    @commands.is_owner()
+    async def r_blacklist(self, interaction: discord.ApplicationContext, user: discord.Member):
+        b_id = str(interaction.author.id)
+
+        data = load_blacklist_data()
+
+        if b_id not in data:
+            user_id = str(user.id)
+            if user_id in data:
+                del data[user_id]
+                save_blacklist_data(data)
+                await interaction.response.send_message(f"{user.mention}をブラックリストから削除しました。", ephemeral=True)
+            else:
+                await interaction.response.send_message("このユーザーはブラックリストに登録されていません。", ephemeral=True)
+        else:
+            await interaction.response.send_message("あなたはブラックリストに登録されています。", ephemeral=True)
+
+
 
 
 
