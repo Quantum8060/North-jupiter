@@ -805,26 +805,26 @@ async def math(ctx: discord.ApplicationContext, money: discord.Option(int, descr
 
 @bot.slash_command(name="timeout", description="タイムアウトします。", guild_ids=main_guild)
 @commands.has_permissions(administrator = True)
-async def timeout(ctx: discord.ApplicationContext, user: discord.Member, minutes: int):
+async def timeout(ctx: discord.ApplicationContext, user: discord.Member, minutes: int, reason: discord.Option(str, description="タイムアウトする理由を入力してください。")):
 
     duration = timedelta(minutes=minutes)
-    await user.timeout_for(duration)
+    await user.timeout_for(duration, reason=reason)
     await ctx.respond(f"{user.mention}を{minutes}分間タイムアウトしました。", ephemeral=True)
 
 
 #cogs登録
 cogs_list = [
     'anonymous',
+    'blacklist',
     'clear',
-    'ping',
+    'dm',
+    'embed'
     'invite',
     'mcstatus',
-    'dm',
-    'tasks',
+    'ping',
     'random',
-    'blacklist',
     'stop',
-    'embed'
+    'tasks',
 ]
 
 for cog in cogs_list:
