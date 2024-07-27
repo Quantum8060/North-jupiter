@@ -818,7 +818,7 @@ cogs_list = [
     'blacklist',
     'clear',
     'dm',
-    'embed'
+    'embed',
     'invite',
     'mcstatus',
     'ping',
