@@ -39,7 +39,7 @@ class anonymous(commands.Cog):
 
                 log_c = await self.bot.fetch_channel("1266555623722451027")
 
-                await log_c.send(f"anonymousコマンド使用\nuser:{interaction.user.name}", embed=embed)
+                await log_c.send(f"anonymousコマンド使用\nuser:{interaction.user.display_name}", embed=embed)
             elif text:
                 embed=discord.Embed()
                 embed.add_field(name="", value=f"{text}", inline=True)
@@ -49,7 +49,7 @@ class anonymous(commands.Cog):
 
                 log_c = await self.bot.fetch_channel("1266555623722451027")
 
-                await log_c.send(f"anonymousコマンド使用\nuser:{interaction.user.name}", embed=embed)
+                await log_c.send(f"anonymousコマンド使用\nuser:{interaction.user.display_name}", embed=embed)
             elif picture:
                 embed=discord.Embed()
                 embed.set_image(url=picture.url)
@@ -59,7 +59,7 @@ class anonymous(commands.Cog):
 
                 log_c = await self.bot.fetch_channel("1266555623722451027")
 
-                await log_c.send(f"anonymousコマンド使用\nuser:{interaction.user.name}", embed=embed)
+                await log_c.send(f"anonymousコマンド使用\nuser:{interaction.user.display_name}", embed=embed)
             else:
                 await interaction.respond("テキスト or 画像を送信してください。", ephemeral=True)
         else:
