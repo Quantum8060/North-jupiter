@@ -31,25 +31,37 @@ class anonymous(commands.Cog):
         if user_id not in data:
             if text and picture:
                 embed=discord.Embed()
-                embed.add_field(name="", value=f"{text}", inline=False)
+                embed.add_field(name="", value=f"{text}", inline=True)
                 embed.set_image(url=picture.url)
 
                 await interaction.respond("匿名メッセージを送信しました。", ephemeral=True)
                 await interaction.channel.send(embed=embed)
+
+                log_c = await self.bot.fetch_channel("1266555623722451027")
+
+                await log_c.send(f"anonymousコマンド使用\nuser:{interaction.user.name}", embed=embed)
             elif text:
                 embed=discord.Embed()
-                embed.add_field(name="", value=f"{text}", inline=False)
+                embed.add_field(name="", value=f"{text}", inline=True)
 
                 await interaction.respond("匿名メッセージを送信しました。", ephemeral=True)
                 await interaction.channel.send(embed=embed)
+
+                log_c = await self.bot.fetch_channel("1266555623722451027")
+
+                await log_c.send(f"anonymousコマンド使用\nuser:{interaction.user.name}", embed=embed)
             elif picture:
                 embed=discord.Embed()
                 embed.set_image(url=picture.url)
 
                 await interaction.respond("匿名メッセージを送信しました。", ephemeral=True)
                 await interaction.channel.send(embed=embed)
+
+                log_c = await self.bot.fetch_channel("1266555623722451027")
+
+                await log_c.send(f"anonymousコマンド使用\nuser:{interaction.user.name}", embed=embed)
             else:
-                await interaction.respond("テキストか画像を送信してください。", ephemeral=True)
+                await interaction.respond("テキスト or 画像を送信してください。", ephemeral=True)
         else:
             await interaction.response.send_message("あなたはブラックリストに登録されています。", ephemeral=True)
 
@@ -63,16 +75,9 @@ class say(commands.Cog):
     @discord.slash_command(name='say', description="BOTが発言します。")
     @commands.is_owner()
     async def anonymous(self, interaction: discord.ApplicationContext, text: discord.Option(str, description="メッセージを入力してください。")):
-        user_id = str(interaction.author.id)
 
-        data = load_data()
-
-
-        if user_id not in data:
-            await interaction.response.send_message("送信しました。", ephemeral=True)
-            await interaction.send(text)
-        else:
-            await interaction.response.send_message("あなたはブラックリストに登録されています。", ephemeral=True)
+        await interaction.response.send_message("送信しました。", ephemeral=True)
+        await interaction.send(text)
 
 
 
