@@ -15,6 +15,7 @@ import string
 from dotenv import load_dotenv
 import sqlite3
 from datetime import datetime, date
+from datetime import timedelta
 import pytz
 import aiofiles
 import toml
@@ -772,7 +773,7 @@ async def info(ctx: discord.ApplicationContext):
     embed.add_field(name="鉄", value="1N", inline=True)
     embed.add_field(name="黒曜石", value="5N", inline=True)
     embed.add_field(name="ネザライト", value="4500N", inline=True)
-    embed.add_field(name="100Ruby", value="1N", inline=True)
+    embed.add_field(name="1000Ruby", value="1N", inline=True)
     embed.add_field(name="10itum", value="1N", inline=True)
     embed.add_field(name="100ヨーク通貨", value="1N", inline=True)
     embed.add_field(name="100ペンギン帝国通貨", value="1N", inline=True)
@@ -800,6 +801,15 @@ async def math(ctx: discord.ApplicationContext, money: discord.Option(int, descr
 
     await ctx.response.send_message(f"返済必要額は{dept}ノスタルです。", ephemeral=True)
 
+
+
+@bot.slash_command(name="timeout", description="タイムアウトします。", guild_ids=main_guild)
+@commands.has_permissions(administrator = True)
+async def timeout(ctx: discord.ApplicationContext, user: discord.Member, minutes: int):
+
+    duration = timedelta(minutes=minutes)
+    await user.timeout_for(duration)
+    await ctx.respond(f"{user.mention}を{minutes}分間タイムアウトしました。", ephemeral=True)
 
 
 #cogs登録
