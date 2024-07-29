@@ -19,7 +19,8 @@ from datetime import timedelta
 import pytz
 import aiofiles
 import toml
-
+import subprocess
+import sys
 
 
 
@@ -62,7 +63,10 @@ async def on_ready():
 def stop_py():
     if (bot.is_closed()):
         print("osを切ります。")
-        os.system("kill 1")
+        command = ["python","restart.py"]
+        proc = subprocess.Popen(command)
+        proc.communicate()
+
 
 
 
