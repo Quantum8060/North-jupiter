@@ -803,16 +803,6 @@ async def math(ctx: discord.ApplicationContext, money: discord.Option(int, descr
 
 
 
-@bot.slash_command(name="timeout", description="タイムアウトします。", guild_ids=main_guild)
-@commands.has_permissions(administrator = True)
-async def timeout(ctx: discord.ApplicationContext, user: discord.Member, minutes: int, reason: discord.Option(str, description="タイムアウトする理由を入力してください。")):
-
-    duration = timedelta(minutes=minutes)
-    await user.timeout_for(duration, reason=reason)
-    await ctx.respond(f"{user.mention}を{minutes}分間タイムアウトしました。", ephemeral=True)
-
-
-
 @bot.message_command(name="メッセージを通報", guild_ids=Debug_guild)
 async def userinfo_c(ctx, message: discord.Message):
     global message_c, message_u
