@@ -838,6 +838,14 @@ class reportModal(discord.ui.Modal):
 
 
 
+@bot.slash_command(name="get_pid", description="pidを取得します。", guild_ids=main_guild)
+@commands.is_owner()
+async def pid(ctx: discord.ApplicationContext, ):
+    get_pid = os.getpid()
+    await ctx.response.send_message(get_pid, ephemeral=True)
+
+
+
 #cogs登録
 cogs_list = [
     'anonymous',

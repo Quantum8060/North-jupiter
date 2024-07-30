@@ -26,6 +26,10 @@ class restart(commands.Cog):
         await self.bot.close()
         loop = asyncio.get_event_loop()
         loop.stop
+        kill_pid = os.getpid()
+        kill = ["kill","-KILL", f"{kill_pid}"]
+        subprocess.Popen(kill).communicate()
+
 
 
 class stop(commands.Cog):
