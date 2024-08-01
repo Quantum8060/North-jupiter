@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 import discord.ui
-from discord.ext.commands import NotOwner
+from discord.ext.commands import MissingAnyRole
 
 Debug_guild = [1235247721934360577]
 
@@ -38,7 +38,7 @@ class dm(commands.Cog):
 
     @dm.error
     async def dmerror(self, ctx, error):
-        if isinstance(error, NotOwner):
+        if isinstance(error, MissingAnyRole):
             await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
         else:
             await ctx.respond("Something went wrong...", ephemeral=True)

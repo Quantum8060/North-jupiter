@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import discord.ui
 import json
+from discord.ext.commands import MissingAnyRole
 
 Debug_guild = [1235247721934360577]
 main_guild = [962647934695002173, 1235247721934360577]
@@ -49,6 +50,14 @@ class embed(commands.Cog):
             await interaction.respond("フォームでの入力を待機しています…", ephemeral=True)
         else:
             await interaction.response.send_message("あなたはブラックリストに登録されています。", ephemeral=True)
+
+    @embed.error
+    async def embederror(ctx, error):
+        if isinstance(error, MissingAnyRole):
+            await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+        else:
+            await ctx.respond("Something went wrong...", ephemeral=True)
+            raise error
 
 def setup(bot):
     bot.add_cog(embed(bot))

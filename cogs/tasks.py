@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import psutil
 import datetime
+from discord.ext.commands import NotOwner
 
 Debug_guild = [1235247721934360577]
 
@@ -23,6 +24,14 @@ class tasks(commands.Cog):
         embed.add_field(name="サーバー起動時刻", value=f"{time}", inline=False)
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @tasks.error
+    async def taskserror(ctx, error):
+        if isinstance(error, NotOwner):
+            await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+        else:
+            await ctx.respond("Something went wrong...", ephemeral=True)
+            raise error
 
 
 def setup(bot):

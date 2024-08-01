@@ -21,6 +21,7 @@ import aiofiles
 import toml
 import subprocess
 import sys
+from discord.ext.commands import NotOwner
 
 
 
@@ -200,6 +201,14 @@ async def open(ctx: discord.ApplicationContext, user: discord.Member, amount: di
     else:
         await ctx.respond("0以下にはできません。", ephemeral=True)
 
+@open.error
+async def openerror(ctx, error):
+    if isinstance(error, MissingAnyRole):
+        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+    else:
+        await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
+
 
 
 @admin.command(name="bal", description="ユーザーの所持金の表示", guild_ids=main_guild)
@@ -216,11 +225,19 @@ async def bal(ctx: discord.ApplicationContext, user: discord.Member):
     else:
         await ctx.respond("口座がありません。", ephemeral=True)
 
+@bal.error
+async def balerror(ctx, error):
+    if isinstance(error, MissingAnyRole):
+        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+    else:
+        await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
+
 
 
 @admin.command(name="c_bal", description="企業の所持金の表示", guild_ids=main_guild)
 @commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
-async def bal(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
+async def c_bal(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
     company_info = get_company_info(company)
     if company_info:
         embed = discord.Embed(title="残高確認", description=f"{company}の残高を表示しています。", color=0x38c571)
@@ -231,6 +248,14 @@ async def bal(ctx: discord.ApplicationContext, company: discord.Option(str, desc
         await log_c.send(f"c_balコマンド使用\nuser:{ctx.user.name}\ncompany:{company}")
     else:
         await ctx.respond("口座がありません。", ephemeral=True)
+
+@c_bal.error
+async def c_balerror(ctx, error):
+    if isinstance(error, MissingAnyRole):
+        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+    else:
+        await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
 
 
 
@@ -254,6 +279,13 @@ async def give(ctx: discord.ApplicationContext, user: discord.Member, amount: di
     else:
         await ctx.respond("所持金を0以下にすることはできません。", ephemeral=True)
 
+@give.error
+async def giveerror(ctx, error):
+    if isinstance(error, MissingAnyRole):
+        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+    else:
+        await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
 
 
 class panelView(discord.ui.View):
@@ -292,6 +324,14 @@ async def panel(ctx: discord.ApplicationContext):
     log_c = await bot.fetch_channel("1262093173518499842")
     await log_c.send(f"panelコマンド使用\nuser:{ctx.user.name}")
 
+@panel.error
+async def panelerror(ctx, error):
+    if isinstance(error, MissingAnyRole):
+        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+    else:
+        await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
+
 
 
 @admin.command(name="tra", description="取引履歴を表示します。", guild_ids=main_guild)
@@ -310,6 +350,13 @@ async def transaction(ctx, user: discord.Member):
         embed = discord.Embed(title="データなし", description=f"{ctx.user.mention}の取引履歴は存在しません。", color=0xff0000)
         await ctx.respond(embed=embed, ephemeral=True)
 
+@transaction.error
+async def transactionerror(ctx, error):
+    if isinstance(error, MissingAnyRole):
+        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+    else:
+        await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
 
 
 @admin.command(name="delete", description="口座を削除します。")
@@ -341,6 +388,14 @@ async def delete(ctx: discord.ApplicationContext, reason:discord.Option(str, des
         else:
             await ctx.response.send_message(f"{company}のデータは存在しません。", ephemeral=True)
 
+@delete.error
+async def deleteerror(ctx, error):
+    if isinstance(error, NotOwner):
+        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+    else:
+        await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
+
 
 
 @admin.command(name="log", description="nohup.outファイルを送信します。")
@@ -348,12 +403,28 @@ async def delete(ctx: discord.ApplicationContext, reason:discord.Option(str, des
 async def log(ctx: discord.ApplicationContext):
     await ctx.response.send_message(file=discord.File("nohup.out"), ephemeral=True)
 
+@log.error
+async def logerror(ctx, error):
+    if isinstance(error, NotOwner):
+        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+    else:
+        await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
+
 
 
 @admin.command(name="get_db", description="DBを取得します。")
 @commands.is_owner()
 async def get_db(ctx: discord.ApplicationContext):
     await ctx.response.send_message(file=discord.File("users.db"), ephemeral=True)
+
+@get_db.error
+async def get_dberror(ctx, error):
+    if isinstance(error, NotOwner):
+        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+    else:
+        await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
 
 
 
@@ -792,6 +863,14 @@ async def leave(ctx: discord.ApplicationContext):
     await ctx.respond("サーバーから退出します。")
     await ctx.guild.leave()
 
+@leave.error
+async def leaveerror(ctx, error):
+    if isinstance(error, NotOwner):
+        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+    else:
+        await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
+
 
 
 @bot.slash_command(name="math", description="空色財閥用コマンド", guild_ids=main_guild)
@@ -843,6 +922,14 @@ class reportModal(discord.ui.Modal):
 async def pid(ctx: discord.ApplicationContext, ):
     get_pid = os.getpid()
     await ctx.response.send_message(get_pid, ephemeral=True)
+
+@pid.error
+async def openerror(ctx, error):
+    if isinstance(error, NotOwner):
+        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+    else:
+        await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
 
 
 
