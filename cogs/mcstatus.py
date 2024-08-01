@@ -15,15 +15,6 @@ def save_data(data):
     with open(blacklist_file, 'w') as file:
         json.dump(data, file, indent=4)
 
-lock_file = 'lock.json'
-
-def load_lock_data():
-    with open(lock_file, 'r') as file:
-        return json.load(file)
-
-def save_lock_data(data):
-    with open(lock_file, 'w') as file:
-        json.dump(data, file, indent=4)
 
 class mcstatus(commands.Cog):
 
