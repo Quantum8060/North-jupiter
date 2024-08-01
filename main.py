@@ -807,7 +807,7 @@ async def math(ctx: discord.ApplicationContext, money: discord.Option(int, descr
 
 
 
-@bot.message_command(name="メッセージを通報", guild_ids=Debug_guild)
+@bot.message_command(name="メッセージを通報")
 async def userinfo_c(ctx, message: discord.Message):
     global message_c, message_u
     message_c = message.content
