@@ -10,7 +10,7 @@ class report(commands.Cog):
         self.bot = bot
 
     @discord.slash_command(name="report", description="通報を行います。")
-    async def ping(self, ctx: discord.ApplicationContext, text: discord.Option(str, description="通報内容を入力"), image: discord.Attachment = None):
+    async def report(self, ctx: discord.ApplicationContext, text: discord.Option(str, description="通報内容を入力"), image: discord.Attachment = None):
         if text and image:
             embed = discord.Embed(title="通報サービス", description="以下の通報を受け取りました。")
             embed.add_field(name="通報者", value=ctx.user.display_name, inline=False)

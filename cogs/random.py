@@ -23,7 +23,7 @@ class dice(commands.Cog):
         self.bot = bot
 
     @discord.slash_command(name="dice", description="1~決めた数字の範囲内でサイコロをふります。")
-    async def avatar(self, interaction: discord.ApplicationContext, num: discord.Option(int, required=True, description="振りたい最大値を入力。")):
+    async def dice(self, interaction: discord.ApplicationContext, num: discord.Option(int, required=True, description="振りたい最大値を入力。")):
         user_id = str(interaction.author.id)
 
         data = load_data()
