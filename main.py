@@ -953,6 +953,7 @@ cogs_list = [
     'mcstatus',
     'ping',
     'random',
+    'stop',
     'tasks',
     'report',
 ]
