@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
+from discord.ext.commands import NotOwner
 import json
 
 Debug_guild = [1235247721934360577]
@@ -48,10 +49,19 @@ class blacklist(commands.Cog):
         else:
             await interaction.response.send_message("あなたはブラックリストに登録されています。", ephemeral=True)
 
+    @a_blacklist.error
+    async def adderror(ctx, error):
+        if isinstance(error, NotOwner):
+            await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+        else:
+            await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
+
+
+
     @blacklists.command(name="show", description="ブラックリストを一覧表示します。", guild_ids=main_guild)
     @commands.is_owner()
     async def s_blacklist(self, interaction: discord.ApplicationContext):
-        b_id = str(interaction.author.id)
 
         data = load_blacklist_data()
 
@@ -62,8 +72,6 @@ class blacklist(commands.Cog):
             await interaction.send("データファイルが見つかりませんでした。")
             return
 
-        user_id = str(interaction.author.id)
-
         data = load_blacklist_data()
 
         embed = discord.Embed(title="ブラックリストユーザー一覧")
@@ -72,6 +80,16 @@ class blacklist(commands.Cog):
         embed.add_field(name="ブラックリストユーザーの一覧です。", value=user_info, inline=False)
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @s_blacklist.error
+    async def showerror(ctx, error):
+        if isinstance(error, NotOwner):
+            await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+        else:
+            await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
+
+
 
     @blacklists.command(name="remove", description="ブラックリストからユーザーを削除します。", guild_ids=main_guild)
     @commands.is_owner()
@@ -90,6 +108,14 @@ class blacklist(commands.Cog):
                 await interaction.response.send_message("このユーザーはブラックリストに登録されていません。", ephemeral=True)
         else:
             await interaction.response.send_message("あなたはブラックリストに登録されています。", ephemeral=True)
+
+    @r_blacklist.error
+    async def removeerror(ctx, error):
+        if isinstance(error, NotOwner):
+            await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+        else:
+            await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
 
 
 
