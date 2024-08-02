@@ -662,11 +662,12 @@ async def u_bal(ctx, user: discord.Member):
 async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, description="送金する金額を記入"), user: discord.Member = None, company: discord.Option(discord.SlashCommandOptionType.string, description="企業を入力してください") =None , reason: discord.Option(discord.SlashCommandOptionType.string, description="取引内容を入力") =None):
 
     user_info = get_user_info(ctx.user.id)
+    send_user_info = get_user_info(user.id)
 
     if amount > int(0):
         if amount <= int(user_info[1]):
             if amount and user and reason:
-                if user_info:
+                if send_user_info:
                     user_info = get_user_info(ctx.author.id)
                     Balance = int(user_info[1]) - amount
 
@@ -704,7 +705,7 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
                 else:
                     await ctx.response.send_message("送金先のユーザーが口座を持っていません。", ephemeral=True)
             elif amount and user:
-                if user_info:
+                if send_user_info:
                     user_info = get_user_info(ctx.author.id)
                     Balance = int(user_info[1]) - amount
 
@@ -817,21 +818,6 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
             await ctx.response.send_message("残高が足りません。", ephemeral=True)
     else:
         await ctx.response.send_message("1以上の値を入力してください。", ephemeral=True)
-
-
-
-@bot.slash_command(name="search", description="口座が存在するか確認します。", guild_ids=main_guild)
-async def search(ctx: discord.ApplicationContext, user: discord.Member):
-
-    user_info = get_user_info(user.id)
-    if user_info:
-
-        embed = discord.Embed(title="口座確認", description=f"{user.mention}の口座は存在します。", color=0x38c571)
-
-        await ctx.response.send_message(embed=embed, ephemeral=True)
-    else:
-        embed = discord.Embed(title="口座確認", description=f"{user.mention}の口座は存在しません。", color=0xff0000)
-        await ctx.response.send_message(embed=embed, ephemeral=True)
 
 
 
