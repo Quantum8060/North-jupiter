@@ -109,23 +109,6 @@ async def save_transaction_data(t_data):
 
 
 
-blacklist_file = 'blacklist.json'
-
-async def load_blacklist_data():
-    try:
-        async with aiofiles.open(blacklist_file, 'r') as b_file:
-            return json.loads(await b_file.read())
-    except FileNotFoundError:
-        return {}
-
-async def save_blacklist_data(b_data):
-    async with aiofiles.open(blacklist_file, 'w') as b_file:
-        await b_file.write(json.dumps(b_data, indent=4))
-
-
-
-
-
 
 conn = sqlite3.connect('users.db')
 c = conn.cursor()
@@ -199,30 +182,23 @@ admin = discord.SlashCommandGroup("admin", "admin related commands")
 @commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def open(ctx: discord.ApplicationContext, user: discord.Member, amount: discord.Option(int, required=True, description="保存する内容を入力。")):
 
-    data = load_blacklist_data()
+    if int(amount) >= 0:
+        user_id = str(user.id)
+        cash = int(amount)
+        save_user(user_id, cash)
 
-    user_id = user.id
+        user_info = get_user_info(user.id)
 
-    if user_id not in data:
-        if int(amount) >= 0:
-            user_id = str(user.id)
-            cash = int(amount)
-            save_user(user_id, cash)
+        embed = discord.Embed(title="口座開設完了", description="ノスタルジカをご利用いただきありがとうございます。\n口座の開設が完了しました。", color=0x38c571)
+        embed.add_field(name="開設者", value=f"{user.mention}", inline=False)
+        embed.add_field(name="開設担当者", value=f"{ctx.user.mention}", inline=False)
+        embed.add_field(name="残高", value=f"{user_info[1]}ノスタル", inline=False)
 
-            user_info = get_user_info(user.id)
-
-            embed = discord.Embed(title="口座開設完了", description="ノスタルジカをご利用いただきありがとうございます。\n口座の開設が完了しました。", color=0x38c571)
-            embed.add_field(name="開設者", value=f"{user.mention}", inline=False)
-            embed.add_field(name="開設担当者", value=f"{ctx.user.mention}", inline=False)
-            embed.add_field(name="残高", value=f"{user_info[1]}ノスタル", inline=False)
-
-            await ctx.respond(embed=embed)
-            log_c = await bot.fetch_channel("1262092921964986509")
-            await log_c.send(f"openコマンド使用\nuser:{ctx.user.name}\ntarget:{user.name}")
-        else:
-            await ctx.respond("0以下にはできません。", ephemeral=True)
+        await ctx.respond(embed=embed)
+        log_c = await bot.fetch_channel("1262092921964986509")
+        await log_c.send(f"openコマンド使用\nuser:{ctx.user.name}\ntarget:{user.name}")
     else:
-        await ctx.respond("ブラックリストに登録されているユーザーの口座を開設することはできません。", ephemeral=True)
+        await ctx.respond("0以下にはできません。", ephemeral=True)
 
 @open.error
 async def openerror(ctx, error):
@@ -977,7 +953,6 @@ cogs_list = [
     'mcstatus',
     'ping',
     'random',
-    'stop',
     'tasks',
     'report',
 ]
