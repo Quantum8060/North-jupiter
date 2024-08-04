@@ -637,12 +637,11 @@ async def u_bal(ctx, user: discord.Member):
 async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, description="送金する金額を記入"), user: discord.Member = None, company: discord.Option(discord.SlashCommandOptionType.string, description="企業を入力してください") =None , reason: discord.Option(discord.SlashCommandOptionType.string, description="取引内容を入力") =None):
 
     user_info = get_user_info(ctx.user.id)
-    send_user_info = get_user_info(user.id)
 
     if amount > int(0):
         if amount <= int(user_info[1]):
             if amount and user and reason:
-                if send_user_info:
+                if get_user_info(user.id):
                     user_info = get_user_info(ctx.author.id)
                     Balance = int(user_info[1]) - amount
 
@@ -657,19 +656,6 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
                     cash = int(partner)
                     save_user(user_id, cash)
 
-                    user_data = {
-                        'id': ctx.user.id,
-                        'amount': amount,
-                        'reason': reason,
-                        'timestamp': datetime.now(pytz.timezone('Asia/Tokyo')).strftime("%Y-%m-%d %H:%M:%S")
-                    }
-
-                    data = await load_transaction_data()
-                    if str(ctx.user.id) not in data:
-                        data[str(ctx.user.id)] = []
-                    data[str(ctx.user.id)].append(user_data)
-                    await save_transaction_data(data)
-
                     embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
                     embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
                     embed.add_field(name="送金元", value=f"{ctx.user.mention}")
@@ -680,7 +666,7 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
                 else:
                     await ctx.response.send_message("送金先のユーザーが口座を持っていません。", ephemeral=True)
             elif amount and user:
-                if send_user_info:
+                if get_user_info(user.id):
                     user_info = get_user_info(ctx.author.id)
                     Balance = int(user_info[1]) - amount
 
@@ -700,18 +686,6 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
                     embed.add_field(name="送金元", value=f"{ctx.user.mention}")
                     embed.add_field(name="金額", value=f"{amount}", inline=False)
 
-                    user_data = {
-                        'id': ctx.user.id,
-                        'amount': amount,
-                        'timestamp': datetime.now(pytz.timezone('Asia/Tokyo')).strftime("%Y-%m-%d %H:%M:%S")
-                    }
-
-                    data = await load_transaction_data()
-                    if str(ctx.user.id) not in data:
-                        data[str(ctx.user.id)] = []
-                    data[str(ctx.user.id)].append(user_data)
-                    await save_transaction_data(data)
-
                     await ctx.response.send_message(embed=embed)
                 else:
                     await ctx.response.send_message("送金先のユーザーが口座を持っていません。", ephemeral=True)
@@ -729,19 +703,6 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
                 company_id = str(company)
                 cash = int(partner)
                 save_company(company_id, cash)
-
-                user_data = {
-                    'id': ctx.user.id,
-                    'amount': amount,
-                    'reason': reason,
-                    'timestamp': datetime.now(pytz.timezone('Asia/Tokyo')).strftime("%Y-%m-%d %H:%M:%S")
-                }
-
-                data = await load_transaction_data()
-                if str(ctx.user.id) not in data:
-                    data[str(ctx.user.id)] = []
-                data[str(ctx.user.id)].append(user_data)
-                await save_transaction_data(data)
 
                 embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
                 embed.add_field(name="送金先", value=f"{company}", inline=False)
@@ -769,18 +730,6 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
                 embed.add_field(name="送金先", value=f"{company}", inline=False)
                 embed.add_field(name="送金元", value=f"{ctx.user.mention}")
                 embed.add_field(name="金額", value=f"{amount}", inline=False)
-
-                user_data = {
-                    'id': ctx.user.id,
-                    'amount': amount,
-                    'timestamp': datetime.now(pytz.timezone('Asia/Tokyo')).strftime("%Y-%m-%d %H:%M:%S")
-                }
-
-                data = await load_transaction_data()
-                if str(ctx.user.id) not in data:
-                    data[str(ctx.user.id)] = []
-                data[str(ctx.user.id)].append(user_data)
-                await save_transaction_data(data)
 
                 await ctx.response.send_message(embed=embed)
             elif amount and user and company:
