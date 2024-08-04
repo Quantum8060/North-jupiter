@@ -92,18 +92,18 @@ async def save_company_data(data):
 
 
 
-transaction_file = 'transaction.json'
+announce_file = 'announce.json'
 
-async def load_transaction_data():
+async def load_announce_data():
     try:
-        async with aiofiles.open(transaction_file, 'r') as t_file:
-            return json.loads(await t_file.read())
+        async with aiofiles.open(announce_file, 'r') as a_file:
+            return json.loads(await a_file.read())
     except FileNotFoundError:
         return {}
 
-async def save_transaction_data(t_data):
-    async with aiofiles.open(transaction_file, 'w') as t_file:
-        await t_file.write(json.dumps(t_data, indent=4))
+async def save_announce_data(a_data):
+    async with aiofiles.open(announce_file, 'w') as a_file:
+        await a_file.write(json.dumps(a_data, indent=4))
 
 
 
@@ -902,6 +902,7 @@ cogs_list = [
     'stop',
     'tasks',
     'report',
+    'announce',
 ]
 
 for cog in cogs_list:
