@@ -333,31 +333,6 @@ async def panelerror(ctx, error):
 
 
 
-@admin.command(name="tra", description="取引履歴を表示します。", guild_ids=main_guild)
-@commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
-async def transaction(ctx, user: discord.Member):
-    data = await load_transaction_data()
-    user_data = data.get(str(user.id), None)
-    if user_data:
-        embed = discord.Embed(title=f"{user.display_name}の取引履歴を表示しています。", color=0x38c571)
-        for entry in user_data:
-            embed.add_field(name=entry['timestamp'], value=f"金額: {entry['amount']}", inline=False)
-        await ctx.respond(embed=embed, ephemeral=True)
-        log_c = await bot.fetch_channel("1262093150638571614")
-        await log_c.send(f"traコマンド使用\nuser:{ctx.user.name}\ntarget:{user.name}")
-    else:
-        embed = discord.Embed(title="データなし", description=f"{ctx.user.mention}の取引履歴は存在しません。", color=0xff0000)
-        await ctx.respond(embed=embed, ephemeral=True)
-
-@transaction.error
-async def transactionerror(ctx, error):
-    if isinstance(error, MissingAnyRole):
-        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
-    else:
-        await ctx.respond("Something went wrong...", ephemeral=True)
-        raise error
-
-
 @admin.command(name="delete", description="口座を削除します。")
 @commands.is_owner()
 async def delete(ctx: discord.ApplicationContext, reason:discord.Option(str, description="理由を入力してください。"), user: discord.Member = None, company: discord.Option(discord.SlashCommandOptionType.string, description="企業名を入力してください。") = None):
@@ -412,7 +387,7 @@ async def logerror(ctx, error):
 
 
 
-@admin.command(name="get_db", description="DBを取得します。")
+@admin.command(name="get_db", description="DBファイルを取得します。")
 @commands.is_owner()
 async def get_db(ctx: discord.ApplicationContext):
     await ctx.response.send_message(file=discord.File("users.db"), ephemeral=True)
@@ -818,21 +793,6 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
             await ctx.response.send_message("残高が足りません。", ephemeral=True)
     else:
         await ctx.response.send_message("1以上の値を入力してください。", ephemeral=True)
-
-
-
-@bot.slash_command(name="tra", description="取引履歴を表示します。", guild_ids=main_guild)
-async def transaction(ctx: discord.ApplicationContext):
-    data = await load_transaction_data()
-    user_data = data.get(str(ctx.user.id), None)
-    if user_data:
-        embed = discord.Embed(title=f"{ctx.user.display_name}の取引履歴を表示しています。", color=0x38c571)
-        for entry in user_data:
-            embed.add_field(name=entry['timestamp'], value=f"金額: {entry['amount']}", inline=False)
-        await ctx.respond(embed=embed, ephemeral=True)
-    else:
-        embed = discord.Embed(title="データなし", description=f"{ctx.user.mention}の取引履歴は存在しません。", color=0xff0000)
-        await ctx.respond(embed=embed, ephemeral=True)
 
 
 
