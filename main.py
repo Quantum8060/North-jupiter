@@ -690,48 +690,54 @@ async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, descr
                 else:
                     await ctx.response.send_message("送金先のユーザーが口座を持っていません。", ephemeral=True)
             elif amount and company and reason:
-                user_info = get_user_info(ctx.author.id)
-                Balance = int(user_info[1]) - amount
+                if get_company_info(company):
+                    user_info = get_user_info(ctx.author.id)
+                    Balance = int(user_info[1]) - amount
 
-                remittance = get_company_info(company)
-                partner = int(remittance[1]) + amount
+                    remittance = get_company_info(company)
+                    partner = int(remittance[1]) + amount
 
-                user_id = str(ctx.author.id)
-                cash = int(Balance)
-                save_user(user_id, cash)
+                    user_id = str(ctx.author.id)
+                    cash = int(Balance)
+                    save_user(user_id, cash)
 
-                company_id = str(company)
-                cash = int(partner)
-                save_company(company_id, cash)
+                    company_id = str(company)
+                    cash = int(partner)
+                    save_company(company_id, cash)
 
-                embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
-                embed.add_field(name="送金先", value=f"{company}", inline=False)
-                embed.add_field(name="送金元", value=f"{ctx.user.mention}")
-                embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
-                embed.add_field(name="取引内容", value=f"{reason}", inline=False)
+                    embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+                    embed.add_field(name="送金先", value=f"{company}", inline=False)
+                    embed.add_field(name="送金元", value=f"{ctx.user.mention}")
+                    embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
+                    embed.add_field(name="取引内容", value=f"{reason}", inline=False)
 
-                await ctx.response.send_message(embed=embed)
+                    await ctx.response.send_message(embed=embed)
+                else:
+                    await ctx.response.send_message(f"{company}という口座は存在しません。")
             elif amount and company:
-                user_info = get_user_info(ctx.author.id)
-                Balance = int(user_info[1]) - amount
+                if get_company_info(company):
+                    user_info = get_user_info(ctx.author.id)
+                    Balance = int(user_info[1]) - amount
 
-                remittance = get_company_info(company)
-                partner = int(remittance[1]) + amount
+                    remittance = get_company_info(company)
+                    partner = int(remittance[1]) + amount
 
-                user_id = str(ctx.author.id)
-                cash = int(Balance)
-                save_user(user_id, cash)
+                    user_id = str(ctx.author.id)
+                    cash = int(Balance)
+                    save_user(user_id, cash)
 
-                company_id = str(company)
-                cash = int(partner)
-                save_company(company_id, cash)
+                    company_id = str(company)
+                    cash = int(partner)
+                    save_company(company_id, cash)
 
-                embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
-                embed.add_field(name="送金先", value=f"{company}", inline=False)
-                embed.add_field(name="送金元", value=f"{ctx.user.mention}")
-                embed.add_field(name="金額", value=f"{amount}", inline=False)
+                    embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+                    embed.add_field(name="送金先", value=f"{company}", inline=False)
+                    embed.add_field(name="送金元", value=f"{ctx.user.mention}")
+                    embed.add_field(name="金額", value=f"{amount}", inline=False)
 
-                await ctx.response.send_message(embed=embed)
+                    await ctx.response.send_message(embed=embed)
+                else:
+                    await ctx.response.send_message(f"{company}という口座は存在しません。")
             elif amount and user and company:
                 await ctx.response.send_message("userかcompanyはどちらか一方を入力してください。", ephemeral=True)
             elif amount and user and company and reason:
