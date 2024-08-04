@@ -26,24 +26,12 @@ class announce(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @discord.slash_command(name="embed", description="メッセージを埋め込みにして送信します。", guild_ids=main_guild)
+    @discord.slash_command(name="announce", description="メッセージを埋め込みにして送信します。", guild_ids=Debug_guild)
     @commands.has_permissions(administrator=True)
-    async def announce_t(self, interaction: discord.ApplicationContext):
-        user_id = str(interaction.author.id)
+    async def announce(self, interaction: discord.ApplicationContext):
+        await interaction.respond("a", ephemeral=True)
 
-        data = load_data()
-        if user_id not in data:
-            await interaction.respond("アナウンスモードになりました。", ephemeral=True)
-
-            data[str(interaction.author.id)] = user_id
-            save_data(data)
-        elif user_id in data:
-            del data[user_id]
-            save_data(data)
-            await interaction.response.send_message("アナウンスモードを終了しました。", ephemeral=True)
-
-
-    @announce_t.error
+    @announce.error
     async def embederror(ctx, error):
         if isinstance(error, MissingAnyRole):
             await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
