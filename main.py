@@ -92,24 +92,6 @@ async def save_company_data(data):
 
 
 
-announce_file = 'announce.json'
-
-async def load_announce_data():
-    try:
-        async with aiofiles.open(announce_file, 'r') as a_file:
-            return json.loads(await a_file.read())
-    except FileNotFoundError:
-        return {}
-
-async def save_announce_data(a_data):
-    async with aiofiles.open(announce_file, 'w') as a_file:
-        await a_file.write(json.dumps(a_data, indent=4))
-
-
-
-
-
-
 conn = sqlite3.connect('users.db')
 c = conn.cursor()
 
@@ -857,7 +839,6 @@ cogs_list = [
     'stop',
     'tasks',
     'report',
-    'announce',
 ]
 
 for cog in cogs_list:
