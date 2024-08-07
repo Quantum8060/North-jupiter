@@ -584,6 +584,7 @@ async def search(ctx: discord.ApplicationContext, company: discord.Option(str, d
 
 
 @company.command(name="list", description="企業の一覧を表示します。", guild_ids=GUILD_IDS)
+@commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def list_companies(ctx: discord.ApplicationContext):
     companies = await load_company_data()
     if not companies:
