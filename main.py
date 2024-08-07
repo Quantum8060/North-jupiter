@@ -399,6 +399,7 @@ company = discord.SlashCommandGroup("company", "company related commands")
 
 
 @company.command(name="open", description="企業口座を開設します。", guild_ids=GUILD_IDS)
+@commands.guild_only()
 async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, description="企業名を入力。")):
 
     company_info = get_company_info(name)
@@ -448,6 +449,7 @@ async def c_bal(ctx: discord.ApplicationContext, company: discord.Option(str, de
 
 
 @company.command(name="pay", description="企業から送金します。", guild_ids=GUILD_IDS)
+@commands.guild_only()
 async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, description="金額を入力してください。"), mycompany: discord.Option(str, description="企業名を入力"), user: discord.Member = None, company: discord.Option(str, description="企業名を入力") = None):
     company_info = get_company_info(mycompany)
     user_info = get_user_info(user.id)
@@ -650,6 +652,7 @@ async def u_bal(ctx, user: discord.Member):
 
 
 @bot.slash_command(name="pay", description="送金します。", guild_ids=GUILD_IDS)
+@commands.guild_only()
 async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, description="送金する金額を記入"), user: discord.Member = None, company: discord.Option(discord.SlashCommandOptionType.string, description="企業を入力してください") =None , reason: discord.Option(discord.SlashCommandOptionType.string, description="取引内容を入力") =None):
 
     user_info = get_user_info(ctx.user.id)
@@ -799,7 +802,7 @@ async def leaveerror(ctx, error):
 
 
 
-@bot.slash_command(name="math", description="空色財閥用コマンド", guild_ids=GUILD_IDS)
+@bot.slash_command(name="空色財閥返済計算", description="空色財閥の返済必要額を計算できます。", guild_ids=GUILD_IDS)
 async def math(ctx: discord.ApplicationContext, money: discord.Option(int, description="借りた金額を入力してください。"), year:discord.Option(int, description="借りた年を入力してください。"), month: discord.Option(int, description="借りた月を入力してください。"), day: discord.Option(int, description="借りた日付けを入力してください。")):
     dt1 = datetime.now()
     dt2 = date(year=year, month=month, day=day)
@@ -856,6 +859,18 @@ async def openerror(ctx, error):
     else:
         await ctx.respond("Something went wrong...", ephemeral=True)
         raise error
+
+
+
+@bot.slash_command(name="アルバイト給与計算", description="アルバイトの給料を計算できます。", guild_ids=GUILD_IDS)
+async def work(ctx: discord.ApplicationContext, user: discord.Member, hourly: discord.Option(int, description="時給を入力してください。"), time: discord.Option(int, description="働いた時間を入力してください。")):
+
+    salary = hourly * time
+
+    embed = discord.Embed(title="", color=0x00ff00)
+    embed.add_field(name=f"{user}の給料", value=f"{salary}ノスタル", )
+
+    await ctx.response.send_message(embed=embed, ephemeral=True)
 
 
 
