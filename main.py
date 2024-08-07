@@ -846,22 +846,6 @@ class reportModal(discord.ui.Modal):
 
 
 
-@bot.slash_command(name="get_pid", description="pidを取得します。", guild_ids=GUILD_IDS)
-@commands.is_owner()
-async def pid(ctx: discord.ApplicationContext, ):
-    get_pid = os.getpid()
-    await ctx.response.send_message(get_pid, ephemeral=True)
-
-@pid.error
-async def openerror(ctx, error):
-    if isinstance(error, NotOwner):
-        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
-    else:
-        await ctx.respond("Something went wrong...", ephemeral=True)
-        raise error
-
-
-
 @bot.slash_command(name="アルバイト給与計算", description="アルバイトの給料を計算できます。", guild_ids=GUILD_IDS)
 async def work(ctx: discord.ApplicationContext, user: discord.Member, hourly: discord.Option(int, description="時給を入力してください。"), time: discord.Option(int, description="働いた時間を入力してください。")):
 
