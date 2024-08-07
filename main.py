@@ -218,7 +218,7 @@ async def balerror(ctx, error):
 
 
 
-@admin.command(name="c_bal", description="企業の所持金の表示", guild_ids=GUILD_IDS)
+@admin.command(name="c_bal", description="企業の所持金を表示します。", guild_ids=GUILD_IDS)
 @commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def c_bal(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
     company_info = get_company_info(company)
@@ -235,6 +235,49 @@ async def c_bal(ctx: discord.ApplicationContext, company: discord.Option(str, de
 @c_bal.error
 async def c_balerror(ctx, error):
     if isinstance(error, MissingAnyRole):
+        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+    else:
+        await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
+
+
+
+@admin.command(name="c_delete", description="企業の口座を削除します。", guild_ids=GUILD_IDS)
+@commands.is_owner()
+async def c_delete(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
+    company_access = await get_company_access(company)
+
+    ceo_id = str(ctx.user.id)
+
+    if company_access.get('ceo') != ceo_id:
+        await ctx.respond("あなたはこの企業のCEOではありません。企業を解体できません。", ephemeral=True)
+        return
+
+    company_id = str(company)
+
+    company_info = get_company_info(company_id)
+
+    if int(company_info[1]) > int(0):
+        await ctx.response.send_message("削除する口座に残高が残っています。!", ephemeral=True)
+    else:
+        if company_info:
+            c.execute(f"""DELETE FROM company WHERE id="{company}";""")
+            conn.commit()
+
+            companies = await load_company_data()
+            if company_id in companies:
+                del companies[company_id]
+                await save_company_data(companies)
+
+            await ctx.response.send_message(f"{company}の口座を削除しました。", ephemeral=True)
+            log_c = await bot.fetch_channel("1262101293376475188")
+            await log_c.send(f"deleteコマンド使用\nuser:{ctx.user.name}\ncompany:{company}")
+        else:
+            await ctx.response.send_message(f"{company}の口座は存在しません。", ephemeral=True)
+
+@c_delete.error
+async def c_balerror(ctx, error):
+    if isinstance(error, NotOwner):
         await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
     else:
         await ctx.respond("Something went wrong...", ephemeral=True)
