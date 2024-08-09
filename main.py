@@ -61,6 +61,8 @@ async def on_ready():
     await channel.send(f"{bot.user}BOT起動完了")
     await pass_channel.send(f"{result}")
     bot.add_view(panelView())
+    bot.add_view(authView())
+
 
 #stop
 def stop_py():
@@ -392,7 +394,7 @@ async def deleteerror(ctx, error):
 
 
 
-@admin.command(name="log", description="nohup.outファイルを送信します。")
+@admin.command(name="log", description="nohup.outファイルを取得します。")
 @commands.is_owner()
 async def log(ctx: discord.ApplicationContext):
     await ctx.response.send_message(file=discord.File("nohup.out"), ephemeral=True)
@@ -419,6 +421,56 @@ async def get_dberror(ctx, error):
     else:
         await ctx.respond("Something went wrong...", ephemeral=True)
         raise error
+
+
+
+class authModal(discord.ui.Modal):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.add_item(discord.ui.InputText(label="タイトルにある式の計算をしてください。", style=discord.InputTextStyle.short))
+
+
+    async def callback(self, interaction: discord.Interaction):
+
+        embed = discord.Embed(title=self.children[0].value, color=0x4169e1)
+        embed.add_field(name="", value="")
+
+        if self.children[0].value == str(auth_math):
+
+            role = interaction.guild.get_role(962649859519832135)
+
+            embed = discord.Embed(title="認証成功", description="認証に成功しました。\nノースユーピテルへようこそ！", color=0x00ff00)
+
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await interaction.user.add_roles(role)
+        else:
+            embed = discord.Embed(title="認証失敗", description="認証に失敗しました。\n再度認証を行ってください。\n \n※何かしらのエラーで失敗する場合は <@!822458692473323560> に伝えてください。", color=0xff0000)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+class authView(discord.ui.View):
+
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="認証", custom_id="auth-button", style=discord.ButtonStyle.primary)
+    async def auth(self, button: discord.ui.Button, interaction):
+
+        global auth_math, random1, random2
+        random1 = random.randint(0, 10)
+        random2 = random.randint(0, 10)
+        auth_math = random1 * random2
+
+        modal = authModal(title=f"{str(random1)} × {str(random2)}")
+        await interaction.response.send_modal(modal)
+
+@admin.command(name="auth", description="認証用パネルを設置します。", guild_ids=GUILD_IDS)
+@commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
+async def auth(ctx: discord.ApplicationContext):
+    embed = discord.Embed(title="認証パネル", description="下のボタンを押して認証を開始してください。\n認証はフォームのタイトルの計算を行うだけです。")
+
+    await ctx.respond("認証用パネルを設置しました。", ephemeral=True)
+    await ctx.send(embed=embed, view=authView())
 
 
 
