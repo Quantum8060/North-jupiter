@@ -472,6 +472,33 @@ async def auth(ctx: discord.ApplicationContext):
     await ctx.respond("認証用パネルを設置しました。", ephemeral=True)
     await ctx.send(embed=embed, view=authView())
 
+@auth.error
+async def autherror(ctx, error):
+    if isinstance(error, MissingAnyRole):
+        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+    else:
+        await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
+
+
+
+@admin.command(name="notice", description="企業広報を作成します。", guild_ids=GUILD_IDS)
+@commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
+async def notice(ctx: discord.ApplicationContext, name: discord.Option(str, description="企業名を入力してください。"), ceo: discord.Member, category: discord.Option(discord.CategoryChannel, description="チャンネルを設置するチャンネルを選択します。")):
+
+    overwrites = {ceo: discord.PermissionOverwrite(read_messages=True, send_messages=True)}
+
+    await ctx.guild.create_text_channel(name=name, category=category, overwrites=overwrites)
+    await ctx.response.send_message(f"企業広報:{name} を作成しました", ephemeral=True)
+
+@notice.error
+async def noticeerror(ctx, error):
+    if isinstance(error, MissingAnyRole):
+        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+    else:
+        await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
+
 
 
 bot.add_application_command(admin)
