@@ -245,14 +245,6 @@ async def c_balerror(ctx, error):
 @admin.command(name="c_delete", description="企業の口座を削除します。", guild_ids=GUILD_IDS)
 @commands.is_owner()
 async def c_delete(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
-    company_access = await get_company_access(company)
-
-    ceo_id = str(ctx.user.id)
-
-    if company_access.get('ceo') != ceo_id:
-        await ctx.respond("あなたはこの企業のCEOではありません。企業を解体できません。", ephemeral=True)
-        return
-
     company_id = str(company)
 
     company_info = get_company_info(company_id)
