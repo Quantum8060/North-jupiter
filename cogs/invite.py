@@ -3,8 +3,13 @@ from discord.ext import commands
 import json
 from dotenv import load_dotenv
 import os
+import configparser
 
 Debug_guild = [1235247721934360577]
+
+config_ini = configparser.ConfigParser()
+config_ini.read("config.ini", encoding="utf-8")
+LINK = config_ini["MAIN"]["LINK"]
 
 blacklist_file = 'blacklist.json'
 
@@ -31,7 +36,7 @@ class inviteModal(discord.ui.Modal):
 
         self.children[0].value
         if self.children[0].value == correct:
-            button = discord.ui.Button(label="Invite BOT!", style=discord.ButtonStyle.primary, url="https://discord.com/oauth2/authorize?client_id=1188144016202670130&permissions=8&integration_type=0&scope=bot+applications.commands")
+            button = discord.ui.Button(label="Invite BOT!", style=discord.ButtonStyle.primary, url=LINK)
             embed=discord.Embed(title="BOT招待", description="Password認証に成功しました。\nBOTを招待する場合は下のボタンを押してください。", color=0x4169e1)
             embed.add_field(name="", value="")
             view = discord.ui.View()
