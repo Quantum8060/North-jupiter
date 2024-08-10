@@ -1040,8 +1040,6 @@ class replyModal(discord.ui.Modal):
         await message.reply(embed=embed, mention_author=False)
         await interaction.response.send_message("送信しました。", ephemeral=True)
 
-
-
 @bot.message_command(name="reply", guild_ids=GUILD_IDS)
 @commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def reply(ctx, message: discord.Message):
@@ -1054,6 +1052,51 @@ async def reply(ctx, message: discord.Message):
 
 @reply.error
 async def replyerror(ctx, error):
+    if isinstance(error, MissingAnyRole):
+        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+    else:
+        await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
+
+
+
+class editModal(discord.ui.Modal):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.add_item(discord.ui.InputText(label="内容を入力してください。", style=discord.InputTextStyle.long))
+
+    async def callback(self, interaction: discord.Interaction):
+
+        embed = discord.Embed(description=f"{self.children[0].value}", color=0xf1c40f)
+        embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
+        embed.add_field(name="", value="")
+
+        message = e_message
+        await message.edit(embed=embed)
+        await interaction.response.send_message("送信しました。", ephemeral=True)
+
+@bot.message_command(name="edit", guild_ids=GUILD_IDS)
+@commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
+async def edit(ctx, message: discord.Message):
+
+    if message.embeds:  # 埋め込みが含まれている場合
+        embed = message.embeds[0]
+
+        if embed.author.name == ctx.user.display_name:
+
+            global e_message
+            e_message = message
+
+            modal = editModal(title="editコマンド")
+            await ctx.send_modal(modal)
+        else:
+            await ctx.respond("他人が送信した埋め込みは編集できません。", ephemeral=True)
+    else:
+        await ctx.respond("埋め込みがありません。", ephemeral=True)
+
+@edit.error
+async def editerror(ctx, error):
     if isinstance(error, MissingAnyRole):
         await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
     else:
@@ -1097,6 +1140,10 @@ async def d_companyerror(ctx, error):
     else:
         await ctx.respond("Something went wrong...", ephemeral=True)
         raise error
+
+
+
+
 
 
 #cogs登録
