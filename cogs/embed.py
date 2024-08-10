@@ -25,12 +25,20 @@ class EmbedModal(discord.ui.Modal):
 
     async def callback(self, interaction: discord.Interaction):
 
+        mentioned_users = [user.mention for user in interaction.guild.members if user.mention in self.children[0].value]
 
-        embed = discord.Embed(description=self.children[0].value, color=0xf1c40f)
-        embed.add_field(name="", value="")
-        embed.set_author(icon_url=interaction.user.avatar.url, name=f"{interaction.user.display_name}")
-        await interaction.channel.send(embeds=[embed])
-        await interaction.response.send_message("送信しました。", ephemeral=True)
+        if mentioned_users:
+            embed = discord.Embed(description=self.children[0].value, color=0xf1c40f)
+            embed.add_field(name="", value="")
+            embed.set_author(icon_url=interaction.user.avatar.url, name=f"{interaction.user.display_name}")
+            await interaction.channel.send(f"{', '.join(mentioned_users)}", embeds=[embed])
+            await interaction.response.send_message("送信しました。", ephemeral=True)
+        else:
+            embed = discord.Embed(description=self.children[0].value, color=0xf1c40f)
+            embed.add_field(name="", value="")
+            embed.set_author(icon_url=interaction.user.avatar.url, name=f"{interaction.user.display_name}")
+            await interaction.channel.send(embeds=[embed])
+            await interaction.response.send_message("送信しました。", ephemeral=True)
 
 class embed(commands.Cog):
 

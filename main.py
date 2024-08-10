@@ -270,7 +270,7 @@ async def c_delete(ctx: discord.ApplicationContext, company: discord.Option(str,
             await ctx.response.send_message(f"{company}の口座は存在しません。", ephemeral=True)
 
 @c_delete.error
-async def c_balerror(ctx, error):
+async def c_deleteerror(ctx, error):
     if isinstance(error, NotOwner):
         await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
     else:
@@ -1036,7 +1036,7 @@ class replyModal(discord.ui.Modal):
         embed.add_field(name="", value="")
 
         message = r_message
-        await message.reply(embed=embed)
+        await message.reply(embed=embed, mention_author=False)
         await interaction.response.send_message("送信しました。", ephemeral=True)
 
 
@@ -1051,6 +1051,45 @@ async def reply(ctx, message: discord.Message):
     modal = replyModal(title="replyコマンド")
     await ctx.send_modal(modal)
 
+@reply.error
+async def replyerror(ctx, error):
+    if isinstance(error, MissingAnyRole):
+        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+    else:
+        await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
+
+
+
+@bot.slash_command(name="d_company", description="企業口座を削除します。※口座に残高があっても削除します。", guild_ids=Debug_guild)
+@commands.is_owner()
+async def d_company(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
+    company_id = str(company)
+
+    company_info = get_company_info(company_id)
+
+    if company_info:
+        c.execute(f"""DELETE FROM company WHERE id="{company}";""")
+        conn.commit()
+
+        companies = await load_company_data()
+        if company_id in companies:
+            del companies[company_id]
+            await save_company_data(companies)
+
+        await ctx.response.send_message(f"{company}の口座を削除しました。", ephemeral=True)
+        log_c = await bot.fetch_channel("1262101293376475188")
+        await log_c.send(f"deleteコマンド使用\nuser:{ctx.user.name}\ncompany:{company}")
+    else:
+        await ctx.response.send_message(f"{company}の口座は存在しません。", ephemeral=True)
+
+@d_company.error
+async def d_companyerror(ctx, error):
+    if isinstance(error, NotOwner):
+        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
+    else:
+        await ctx.respond("Something went wrong...", ephemeral=True)
+        raise error
 
 
 #cogs登録
