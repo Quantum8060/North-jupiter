@@ -35,6 +35,7 @@ intents.message_content = (True)
 config_ini = configparser.ConfigParser()
 config_ini.read("config.ini", encoding="utf-8")
 TOKEN = config_ini["MAIN"]["TOKEN"]
+LINK = config_ini["MAIN"]["LINK"]
 
 bot = discord.Bot(intents=intents)
 bot.webhooks = {}
@@ -1063,25 +1064,31 @@ async def replyerror(ctx, error):
 
 @bot.slash_command(name="d_company", description="企業口座を削除します。※口座に残高があっても削除します。", guild_ids=Debug_guild)
 @commands.is_owner()
-async def d_company(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
+async def d_company(ctx: discord.ApplicationContext, password:discord.Option(str, description="パスワードを入力してください。"), company: discord.Option(str, description="企業名を入力してください。")):
     company_id = str(company)
 
     company_info = get_company_info(company_id)
 
-    if company_info:
-        c.execute(f"""DELETE FROM company WHERE id="{company}";""")
-        conn.commit()
+    load_dotenv()
+    correct = os.getenv('PASS')
 
-        companies = await load_company_data()
-        if company_id in companies:
-            del companies[company_id]
-            await save_company_data(companies)
+    if password == correct:
+        if company_info:
+            c.execute(f"""DELETE FROM company WHERE id="{company}";""")
+            conn.commit()
 
-        await ctx.response.send_message(f"{company}の口座を削除しました。", ephemeral=True)
-        log_c = await bot.fetch_channel("1262101293376475188")
-        await log_c.send(f"deleteコマンド使用\nuser:{ctx.user.name}\ncompany:{company}")
+            companies = await load_company_data()
+            if company_id in companies:
+                del companies[company_id]
+                await save_company_data(companies)
+
+            await ctx.response.send_message(f"{company}の口座を削除しました。", ephemeral=True)
+            log_c = await bot.fetch_channel("1262101293376475188")
+            await log_c.send(f"deleteコマンド使用\nuser:{ctx.user.name}\ncompany:{company}")
+        else:
+            await ctx.response.send_message(f"{company}の口座は存在しません。", ephemeral=True)
     else:
-        await ctx.response.send_message(f"{company}の口座は存在しません。", ephemeral=True)
+        await ctx.response.send_message("パスワードが間違っています。", ephemeral=True)
 
 @d_company.error
 async def d_companyerror(ctx, error):
