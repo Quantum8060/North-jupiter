@@ -564,7 +564,7 @@ async def c_bal(ctx: discord.ApplicationContext, company: discord.Option(str, de
 
 @company.command(name="pay", description="企業から送金します。", guild_ids=GUILD_IDS)
 @commands.guild_only()
-async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, description="金額を入力してください。"), mycompany: discord.Option(str, description="企業名を入力"), user: discord.Member = None, company: discord.Option(str, description="企業名を入力") = None):
+async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, description="金額を入力してください。"), mycompany: discord.Option(str, description="企業名を入力"), user: discord.Member = None, company: discord.Option(str, description="企業名を入力") = None, reason: discord.Option(str, description="送金理由を入力してください。") = None):
     company_info = get_company_info(mycompany)
     user_info = get_user_info(user.id)
     user_id = str(ctx.user.id)
@@ -619,6 +619,57 @@ async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, des
                 embed.add_field(name="送金先", value=f"{company}", inline=False)
                 embed.add_field(name="送金元", value=f"{mycompany}", inline=False)
                 embed.add_field(name="金額", value=f"{amount}", inline=False)
+
+                await ctx.response.send_message(embed=embed)
+                log_c = await bot.fetch_channel("1262101376591466557")
+                await log_c.send(f"payコマンド使用\ncompany:{mycompany}\nsend:{company}")
+            elif amount and mycompany and user and reason:
+                if user_info:
+                    company_info = get_company_info(mycompany)
+                    Balance = int(company_info[1]) - amount
+
+                    remittance = get_user_info(user.id)
+                    partner = int(remittance[1]) + amount
+
+                    company_id = str(mycompany)
+                    cash = int(Balance)
+                    save_company(company_id, cash)
+
+                    user_id = str(user.id)
+                    cash = int(partner)
+                    save_user(user_id, cash)
+
+                    embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+                    embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
+                    embed.add_field(name="送金元", value=f"{mycompany}", inline=False)
+                    embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
+                    embed.add_field(name="取引内容", value=f"{reason}", inline=False)
+
+                    await ctx.response.send_message(embed=embed)
+                    log_c = await bot.fetch_channel("1262101376591466557")
+                    await log_c.send(f"payコマンド使用\ncompany:{mycompany}\nsend:{user.name}")
+                else:
+                    await ctx.response.send_message("送金先のユーザーが口座を持っていません。")
+            elif amount and mycompany and company and reason:
+                company_info = get_company_info(mycompany)
+                Balance = int(company_info[1]) - amount
+
+                remittance = get_company_info(company)
+                partner = int(remittance[1]) + amount
+
+                Mycompany_id = str(mycompany)
+                cash = int(Balance)
+                save_company(Mycompany_id, cash)
+
+                company = str(company)
+                cash = int(partner)
+                save_company(company, cash)
+
+                embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+                embed.add_field(name="送金先", value=f"{company}", inline=False)
+                embed.add_field(name="送金元", value=f"{mycompany}", inline=False)
+                embed.add_field(name="金額", value=f"{amount}", inline=False)
+                embed.add_field(name="取引内容", value=f"{reason}", inline=False)
 
                 await ctx.response.send_message(embed=embed)
                 log_c = await bot.fetch_channel("1262101376591466557")
@@ -969,6 +1020,36 @@ async def work(ctx: discord.ApplicationContext, user: discord.Member, hourly: di
     embed.add_field(name=f"{user}の給料", value=f"{salary}ノスタル", )
 
     await ctx.response.send_message(embed=embed, ephemeral=True)
+
+
+
+class replyModal(discord.ui.Modal):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.add_item(discord.ui.InputText(label="内容を入力してください。", style=discord.InputTextStyle.long))
+
+    async def callback(self, interaction: discord.Interaction):
+
+        embed = discord.Embed(description=f"{self.children[0].value}", color=0xf1c40f)
+        embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
+        embed.add_field(name="", value="")
+
+        message = r_message
+        await message.reply(embed=embed)
+        await interaction.response.send_message("送信しました。", ephemeral=True)
+
+
+
+@bot.message_command(name="reply", guild_ids=GUILD_IDS)
+@commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
+async def reply(ctx, message: discord.Message):
+
+    global r_message
+    r_message = message
+
+    modal = replyModal(title="replyコマンド")
+    await ctx.send_modal(modal)
 
 
 
