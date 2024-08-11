@@ -53,6 +53,7 @@ result = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
 #起動通知
 @bot.event
 async def on_ready():
+    s_loop.start()
     os.environ['PASS'] = result
     print(f"Bot名:{bot.user} On ready!!")
     print(os.environ['PASS'])
@@ -63,6 +64,14 @@ async def on_ready():
     await pass_channel.send(f"{result}")
     bot.add_view(panelView())
     bot.add_view(authView())
+
+
+@tasks.loop(hours=12)
+async def s_loop():
+    channel = await bot.fetch_channel("1271999568162197524")
+
+    await channel.send(file=discord.File("users.db"), ephemeral=True)
+
 
 
 #stop
