@@ -70,7 +70,7 @@ async def on_ready():
 async def s_loop():
     channel = await bot.fetch_channel("1271999568162197524")
 
-    await channel.send(file=discord.File("users.db"), ephemeral=True)
+    await channel.send(file=discord.File("users.db"))
 
 
 
@@ -83,6 +83,24 @@ def stop_py():
         proc.communicate()
 
 
+
+
+
+async def read_json(file_name):
+    with open(file_name, 'r') as f:
+        data = json.load(f)
+    return data
+
+async def read_multiple_json(files):
+    tasks = [read_json(file) for file in files]
+    results = await asyncio.gather(*tasks)
+    return results
+
+# 読み込むJSONファイルのリスト
+files = ['blacklist.json']
+
+# 非同期で複数のJSONファイルを読み込む
+asyncio.run(read_multiple_json(files))
 
 
 
@@ -1150,6 +1168,52 @@ async def d_companyerror(ctx, error):
         await ctx.respond("Something went wrong...", ephemeral=True)
         raise error
 
+
+
+user_dict = {}
+
+@bot.slash_command(name="annnounce", description="メッセージを埋め込みにして送信します。", guild_ids=GUILD_IDS)
+async def ana_t(ctx):
+    user_id = ctx.author.id
+
+    if user_id in user_dict:
+        # 辞書にユーザーが存在する場合、削除
+        user_dict.pop(user_id)
+        await ctx.respond(f"{ctx.author.mention}さんを辞書から削除しました。", ephemeral=True)
+    else:
+        # 辞書にユーザーが存在しない場合、追加
+        user_dict[user_id] = ctx.author.name
+        await ctx.respond(f"{ctx.author.mention}さんを辞書に追加しました。", ephemeral=True)
+
+@bot.event
+async def on_message(message):
+    user_id = message.author.id
+
+    # 辞書にユーザーが存在し、かつボット自身のメッセージでない場合
+    if user_id in user_dict and not message.author.bot:
+        # メッセージを削除
+        await message.delete()
+
+        # 埋め込みメッセージを作成
+        embed = discord.Embed(
+            title="メッセージが削除されました",
+            description=message.content,
+            color=discord.Color.blue()
+        )
+        embed.set_author(name=message.author.display_name, icon_url=message.author.avatar.url)
+
+        # メンションのリストを作成
+        mentions = [mention.mention for mention in message.mentions]
+        role_mentions = [role.mention for role in message.role_mentions]
+        if message.mention_everyone:
+            mentions.append("@everyone")
+        mention_text = " ".join(mentions + role_mentions)
+
+        # メンション付きでメッセージを送信
+        if mention_text:
+            await message.channel.send(content=mention_text, embed=embed)
+        else:
+            await message.channel.send(embed=embed)
 
 
 
