@@ -1172,18 +1172,18 @@ async def d_companyerror(ctx, error):
 
 user_dict = {}
 
-@bot.slash_command(name="annnounce", description="メッセージを埋め込みにして送信します。", guild_ids=GUILD_IDS)
+@bot.slash_command(name="announce", description="メッセージを埋め込みにして送信します。", guild_ids=GUILD_IDS)
 async def ana_t(ctx):
     user_id = ctx.author.id
 
     if user_id in user_dict:
         # 辞書にユーザーが存在する場合、削除
         user_dict.pop(user_id)
-        await ctx.respond(f"{ctx.author.mention}さんを辞書から削除しました。", ephemeral=True)
+        await ctx.respond(f"{ctx.author.mention}\nアナウンスモードが起動しました。", ephemeral=True)
     else:
         # 辞書にユーザーが存在しない場合、追加
         user_dict[user_id] = ctx.author.name
-        await ctx.respond(f"{ctx.author.mention}さんを辞書に追加しました。", ephemeral=True)
+        await ctx.respond(f"{ctx.author.mention}\nアナウンスモードを終了しました", ephemeral=True)
 
 @bot.event
 async def on_message(message):
