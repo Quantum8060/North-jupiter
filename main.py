@@ -1173,6 +1173,7 @@ async def d_companyerror(ctx, error):
 user_dict = {}
 
 @bot.slash_command(name="announce", description="メッセージを埋め込みにして送信します。", guild_ids=GUILD_IDS)
+@commands.has_permissions(administrator=True)
 async def ana_t(ctx):
     user_id = ctx.author.id
 
@@ -1186,26 +1187,49 @@ async def ana_t(ctx):
         await ctx.respond(f"{ctx.author.mention}\nアナウンスモードを起動しました", ephemeral=True)
 
 @bot.event
-async def on_message(message):
+async def on_message(message: discord.Message):
     user_id = message.author.id
 
     if user_id in user_dict and not message.author.bot:
 
-        await message.delete()
-
         embed = discord.Embed(description=message.content, color=0xf1c40f)
         embed.set_author(name=message.author.display_name, icon_url=message.author.avatar.url)
 
+        if message.attachments:
+            for attachment in message.attachments:
+                if attachment.content_type.startswith("image/"):
+                    embed.set_image(url=attachment.url)
+                    break  # 最初の画像のみを埋め込みに表示
+
+        # メンションのリストを作成
         mentions = [mention.mention for mention in message.mentions]
         role_mentions = [role.mention for role in message.role_mentions]
         if message.mention_everyone:
             mentions.append("@everyone")
         mention_text = " ".join(mentions + role_mentions)
 
-        if mention_text:
-            await message.channel.send(content=mention_text, embed=embed)
+        # 返信元メッセージが存在するかチェック
+        if message.reference:
+            replied_message = await message.channel.fetch_message(message.reference.message_id)
+            # メンション付きでメッセージを送信
+            if mention_text:
+                await replied_message.reply(content=mention_text, embed=embed)
+                await message.delete()
+            else:
+                await replied_message.reply(embed=embed)
+                await message.delete()
+
         else:
-            await message.channel.send(embed=embed)
+            # メンション付きでメッセージを送信
+            if mention_text:
+                await message.channel.send(content=mention_text, embed=embed)
+                await message.delete()
+
+            else:
+                await message.channel.send(embed=embed)
+                await message.delete()
+
+
 
 
 
