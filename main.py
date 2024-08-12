@@ -1179,33 +1179,29 @@ async def ana_t(ctx):
     if user_id in user_dict:
         # 辞書にユーザーが存在する場合、削除
         user_dict.pop(user_id)
-        await ctx.respond(f"{ctx.author.mention}\nアナウンスモードが起動しました。", ephemeral=True)
+        await ctx.respond(f"{ctx.author.mention}\nアナウンスモードが終了しました。", ephemeral=True)
     else:
         # 辞書にユーザーが存在しない場合、追加
         user_dict[user_id] = ctx.author.name
-        await ctx.respond(f"{ctx.author.mention}\nアナウンスモードを終了しました", ephemeral=True)
+        await ctx.respond(f"{ctx.author.mention}\nアナウンスモードを起動しました", ephemeral=True)
 
 @bot.event
 async def on_message(message):
     user_id = message.author.id
 
-    # 辞書にユーザーが存在し、かつボット自身のメッセージでない場合
     if user_id in user_dict and not message.author.bot:
-        # メッセージを削除
+
         await message.delete()
 
-        # 埋め込みメッセージを作成
         embed = discord.Embed(description=message.content, color=0xf1c40f)
         embed.set_author(name=message.author.display_name, icon_url=message.author.avatar.url)
 
-        # メンションのリストを作成
         mentions = [mention.mention for mention in message.mentions]
         role_mentions = [role.mention for role in message.role_mentions]
         if message.mention_everyone:
             mentions.append("@everyone")
         mention_text = " ".join(mentions + role_mentions)
 
-        # メンション付きでメッセージを送信
         if mention_text:
             await message.channel.send(content=mention_text, embed=embed)
         else:
