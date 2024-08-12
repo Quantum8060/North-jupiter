@@ -1195,11 +1195,7 @@ async def on_message(message):
         await message.delete()
 
         # 埋め込みメッセージを作成
-        embed = discord.Embed(
-            title="メッセージが削除されました",
-            description=message.content,
-            color=discord.Color.blue()
-        )
+        embed = discord.Embed(description=message.content, color=0xf1c40f)
         embed.set_author(name=message.author.display_name, icon_url=message.author.avatar.url)
 
         # メンションのリストを作成
