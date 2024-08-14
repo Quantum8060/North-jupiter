@@ -1051,42 +1051,6 @@ async def work(ctx: discord.ApplicationContext, user: discord.Member, hourly: di
 
 
 
-class replyModal(discord.ui.Modal):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-
-        self.add_item(discord.ui.InputText(label="内容を入力してください。", style=discord.InputTextStyle.long))
-
-    async def callback(self, interaction: discord.Interaction):
-
-        embed = discord.Embed(description=f"{self.children[0].value}", color=0xf1c40f)
-        embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
-        embed.add_field(name="", value="")
-
-        message = r_message
-        await message.reply(embed=embed, mention_author=False)
-        await interaction.response.send_message("送信しました。", ephemeral=True)
-
-@bot.message_command(name="reply", guild_ids=GUILD_IDS)
-@commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
-async def reply(ctx, message: discord.Message):
-
-    global r_message
-    r_message = message
-
-    modal = replyModal(title="replyコマンド")
-    await ctx.send_modal(modal)
-
-@reply.error
-async def replyerror(ctx, error):
-    if isinstance(error, MissingAnyRole):
-        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
-    else:
-        await ctx.respond("Something went wrong...", ephemeral=True)
-        raise error
-
-
-
 class editModal(discord.ui.Modal):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
