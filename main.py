@@ -1195,6 +1195,12 @@ async def on_message(message: discord.Message):
 
 
 
+@bot.event
+async def on_member_join(member):
+    welcom_c = await bot.fetch_channel(962647934695002176)
+
+    await welcom_c.send(f"{member.mention}\nノースユーピテルへようこそ！\nまずは <#998491905883111484> を確認することをおすすめします")
+
 
 
 
