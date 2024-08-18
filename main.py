@@ -1225,6 +1225,7 @@ async def tax(ctx: discord.ApplicationContext):
     await ctx.response.send_message(embed=embed)
 
 
+
 @bot.event
 async def on_member_join(member):
     welcom_c = await bot.fetch_channel("962647934695002176")
