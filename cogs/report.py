@@ -21,7 +21,7 @@ class report(commands.Cog):
             await report_c.send(embed=embed)
             await ctx.respond(f"以下の内容で通報を行いました。\n```{text}```\n※通報に際して管理者から連絡が来る可能性があります。", ephemeral=True)
         elif text:
-            embed = discord.Embed(title="通報サービス", description="以下のの通報を受け取りました。")
+            embed = discord.Embed(title="通報サービス", description="以下の通報を受け取りました。")
             embed.add_field(name="通報者", value=ctx.user.display_name, inline=False)
             embed.add_field(name="通報内容", value=f"{text}", inline=False)
 
