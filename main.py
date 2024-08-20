@@ -1201,36 +1201,33 @@ async def on_message(message: discord.Message):
 @bot.slash_command(name="tax", description="納税を行うコマンドです。※国民以外が利用した場合の送金したノスタルは返還不可能です。")
 async def tax(ctx: discord.ApplicationContext):
 
-    company = "ノースユーピテル税務署"
-
     amount = int(200)
     user_info = get_user_info(ctx.author.id)
-    Balance = int(user_info[1]) - amount
 
-    remittance = get_company_info(company)
-    partner = int(remittance[1]) + amount
+    if amount <= int(user_info[1]):
+        company = "ノースユーピテル税務署"
 
-    user_id = str(ctx.author.id)
-    cash = int(Balance)
-    save_user(user_id, cash)
+        Balance = int(user_info[1]) - amount
 
-    company_id = str(company)
-    cash = int(partner)
-    save_company(company_id, cash)
+        remittance = get_company_info(company)
+        partner = int(remittance[1]) + amount
 
-    embed = discord.Embed(title="納税", description="以下の内容で納税を行いました。", color=0x38c571)
-    embed.add_field(name="納税者", value=f"{ctx.author.mention}")
-    embed.add_field(name="金額", value=f"{amount}", inline=False)
+        user_id = str(ctx.author.id)
+        cash = int(Balance)
+        save_user(user_id, cash)
 
-    await ctx.response.send_message(embed=embed)
+        company_id = str(company)
+        cash = int(partner)
+        save_company(company_id, cash)
 
+        embed = discord.Embed(title="納税", description="以下の内容で納税を行いました。", color=0x38c571)
+        embed.add_field(name="納税者", value=f"{ctx.author.mention}")
+        embed.add_field(name="金額", value=f"{amount}", inline=False)
 
+        await ctx.response.send_message(embed=embed)
+    else:
+        await ctx.response.send_message("残高が足りません。", ephemeral=True)
 
-@bot.event
-async def on_member_join(member):
-    welcom_c = await bot.fetch_channel("962647934695002176")
-
-    await welcom_c.send(f"{member.mention}\nノースユーピテルへようこそ！\nまずは <#998491905883111484> を確認することをおすすめします")
 
 
 
