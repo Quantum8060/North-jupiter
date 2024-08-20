@@ -74,6 +74,14 @@ async def s_loop():
 
 
 
+@bot.event
+async def on_guild_join(guild):
+    member = guild.get_member("822458692473323560")
+    if not member:
+        await guild.leave()
+
+
+
 #stop
 def stop_py():
     if (bot.is_closed()):
@@ -1238,15 +1246,11 @@ cogs_list = [
     'anonymous',
     'blacklist',
     'clear',
-    'dm',
     'embed',
     'invite',
-    'mcstatus',
     'ping',
-    'random',
     'stop',
     'tasks',
-    'report',
 ]
 
 for cog in cogs_list:
