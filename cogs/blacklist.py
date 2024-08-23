@@ -29,25 +29,20 @@ class blacklist(commands.Cog):
     @blacklists.command(name="add", description="ユーザーをブラックリストに追加します。", guild_ids=main_guild)
     @commands.is_owner()
     async def a_blacklist(self, interaction: discord.ApplicationContext, user:discord.Member, reason: discord.Option(str, description="理由を入力します。")):
-        b_id = str(interaction.author.id)
 
         data = load_blacklist_data()
 
-        if b_id not in data:
+        user_id = await self.bot.fetch_user(f"{user.id}")
 
-            user_id = await self.bot.fetch_user(f"{user.id}")
+        data = load_blacklist_data()
 
-            data = load_blacklist_data()
+        if user_id not in data:
+            await interaction.respond(f"{user.mention}をブラックリストに追加しました。", ephemeral=True)
 
-            if user_id not in data:
-                await interaction.respond(f"{user.mention}をブラックリストに追加しました。", ephemeral=True)
-
-                data[str(user.id)] = reason
-                save_blacklist_data(data)
-            else:
-                await interaction.response.send_message("このユーザーはすでにブラックリストに追加されています。", ephemeral=True)
+            data[str(user.id)] = reason
+            save_blacklist_data(data)
         else:
-            await interaction.response.send_message("あなたはブラックリストに登録されています。", ephemeral=True)
+            await interaction.response.send_message("このユーザーはすでにブラックリストに追加されています。", ephemeral=True)
 
     @a_blacklist.error
     async def adderror(ctx, error):
@@ -94,20 +89,16 @@ class blacklist(commands.Cog):
     @blacklists.command(name="remove", description="ブラックリストからユーザーを削除します。", guild_ids=main_guild)
     @commands.is_owner()
     async def r_blacklist(self, interaction: discord.ApplicationContext, user: discord.Member):
-        b_id = str(interaction.author.id)
 
         data = load_blacklist_data()
 
-        if b_id not in data:
-            user_id = str(user.id)
-            if user_id in data:
-                del data[user_id]
-                save_blacklist_data(data)
-                await interaction.response.send_message(f"{user.mention}をブラックリストから削除しました。", ephemeral=True)
-            else:
-                await interaction.response.send_message("このユーザーはブラックリストに登録されていません。", ephemeral=True)
+        user_id = str(user.id)
+        if user_id in data:
+            del data[user_id]
+            save_blacklist_data(data)
+            await interaction.response.send_message(f"{user.mention}をブラックリストから削除しました。", ephemeral=True)
         else:
-            await interaction.response.send_message("あなたはブラックリストに登録されています。", ephemeral=True)
+            await interaction.response.send_message("このユーザーはブラックリストに登録されていません。", ephemeral=True)
 
     @r_blacklist.error
     async def removeerror(ctx, error):
