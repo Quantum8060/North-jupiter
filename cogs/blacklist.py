@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
 from discord.ext.commands import NotOwner
-import json
 import sqlite3
 from discord.ext.pages import Paginator, Page
 
