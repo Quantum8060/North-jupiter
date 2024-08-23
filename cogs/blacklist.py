@@ -88,7 +88,7 @@ class blacklist(commands.Cog):
         for i in range(0, len(blacklist), 5):
             embed = discord.Embed(title="ブラックリスト", color=0x00ff00)
             for blacklist_id, cash in blacklist[i:i+5]:
-                embed.add_field(name=f"ユーザー: {blacklist_id}", value=f"所持金: {cash}", inline=False)
+                embed.add_field(name=f"ユーザー: <@{blacklist_id}>", value=f"所持金: {cash}", inline=False)
             embeds.append(embed)
 
         paginator = Paginator(pages=embeds, use_default_buttons=True, timeout=60)
