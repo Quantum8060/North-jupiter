@@ -134,12 +134,13 @@ async def save_company_data(data):
 conn = sqlite3.connect('users.db')
 c = conn.cursor()
 
-
-
 c.execute('''CREATE TABLE IF NOT EXISTS users
              (id TEXT PRIMARY KEY, cash INTEGER )''')
 c.execute('''CREATE TABLE IF NOT EXISTS company
              (id TEXT PRIMARY KEY, cash INTEGER)''')
+c.execute('''CREATE TABLE IF NOT EXISTS blacklist
+             (id TEXT PRIMARY KEY, cash INTEGER)''')
+
 conn.commit()
 
 
@@ -163,6 +164,17 @@ def save_company(company_id, cash):
 
 def get_company_info(company_id):
     c.execute("SELECT id, cash FROM company WHERE id = ?", (company_id,))
+    return c.fetchone()
+
+
+
+def save_blacklist(blacklist_id, cash):
+    with conn:
+        c.execute("INSERT OR IGNORE INTO blacklist (id, cash) VALUES (?, ?)", (blacklist_id, cash))
+        c.execute("UPDATE blacklist SET cash = ? WHERE id = ?", (cash, blacklist_id))
+
+def get_blacklist_info(blacklist_id):
+    c.execute("SELECT id, cash FROM blacklist WHERE id = ?", (blacklist_id,))
     return c.fetchone()
 
 
@@ -273,41 +285,6 @@ async def c_bal(ctx: discord.ApplicationContext, company: discord.Option(str, de
 @c_bal.error
 async def c_balerror(ctx, error):
     if isinstance(error, MissingAnyRole):
-        await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
-    else:
-        await ctx.respond("Something went wrong...", ephemeral=True)
-        raise error
-
-
-
-@admin.command(name="c_delete", description="企業の口座を削除します。", guild_ids=GUILD_IDS)
-@commands.is_owner()
-async def c_delete(ctx: discord.ApplicationContext, company: discord.Option(str, description="企業名を入力してください。")):
-    company_id = str(company)
-
-    company_info = get_company_info(company_id)
-
-    if int(company_info[1]) > int(0):
-        await ctx.response.send_message("削除する口座に残高が残っています。!", ephemeral=True)
-    else:
-        if company_info:
-            c.execute(f"""DELETE FROM company WHERE id="{company}";""")
-            conn.commit()
-
-            companies = await load_company_data()
-            if company_id in companies:
-                del companies[company_id]
-                await save_company_data(companies)
-
-            await ctx.response.send_message(f"{company}の口座を削除しました。", ephemeral=True)
-            log_c = await bot.fetch_channel("1262101293376475188")
-            await log_c.send(f"deleteコマンド使用\nuser:{ctx.user.name}\ncompany:{company}")
-        else:
-            await ctx.response.send_message(f"{company}の口座は存在しません。", ephemeral=True)
-
-@c_delete.error
-async def c_deleteerror(ctx, error):
-    if isinstance(error, NotOwner):
         await ctx.respond("あなたはこのコマンドを使用する権限を持っていません!", ephemeral=True)
     else:
         await ctx.respond("Something went wrong...", ephemeral=True)
@@ -554,26 +531,32 @@ async def c_open(ctx: discord.ApplicationContext, name: discord.Option(str, desc
 
     company_info = get_company_info(name)
 
-    if company_info:
-        embed = discord.Embed(title="エラー", description=f"{name}の口座はすでに存在しています。", color=0xff0000)
-        await ctx.response.send_message(embed=embed, ephemeral=True)
+    user_id = str(ctx.author.id)
+    b_info = get_blacklist_info(user_id)
+
+    if b_info:
+        await ctx.respond("あなたはブラックリストに登録されています。", ephemeral=True)
     else:
-        company_id = str(name)
-        cash = int("0")
-        save_company(company_id, cash)
+        if company_info:
+            embed = discord.Embed(title="エラー", description=f"{name}の口座はすでに存在しています。", color=0xff0000)
+            await ctx.response.send_message(embed=embed, ephemeral=True)
+        else:
+            company_id = str(name)
+            cash = int("0")
+            save_company(company_id, cash)
 
-        ceo = str(ctx.user.id)
-        await save_company_access(company_id, ceo, [])
+            ceo = str(ctx.user.id)
+            await save_company_access(company_id, ceo, [])
 
-        company_info = get_company_info(name)
+            company_info = get_company_info(name)
 
-        embed = discord.Embed(title="企業口座開設完了", description="ノスタルジカをご利用いただきありがとうございます。\n以下の企業口座の開設が完了しました。", color=0x38c571)
-        embed.add_field(name="企業名", value=f"{name}", inline=False)
-        embed.add_field(name="社長", value=f"{ctx.user.mention}", inline=False)
+            embed = discord.Embed(title="企業口座開設完了", description="ノスタルジカをご利用いただきありがとうございます。\n以下の企業口座の開設が完了しました。", color=0x38c571)
+            embed.add_field(name="企業名", value=f"{name}", inline=False)
+            embed.add_field(name="社長", value=f"{ctx.user.mention}", inline=False)
 
-        await ctx.respond(embed=embed)
-        log_c = await bot.fetch_channel("1262101253752881229")
-        await log_c.send(f"openコマンド使用\nuser:{ctx.user.name}\nc_name:{name}")
+            await ctx.respond(embed=embed)
+            log_c = await bot.fetch_channel("1262101253752881229")
+            await log_c.send(f"openコマンド使用\nuser:{ctx.user.name}\nc_name:{name}")
 
 
 
@@ -603,117 +586,121 @@ async def c_bal(ctx: discord.ApplicationContext, company: discord.Option(str, de
 async def c_pay(ctx: discord.ApplicationContext, amount: discord.Option(int, description="金額を入力してください。"), mycompany: discord.Option(str, description="企業名を入力"), user: discord.Member = None, company: discord.Option(str, description="企業名を入力") = None, reason: discord.Option(str, description="送金理由を入力してください。") = None):
     company_info = get_company_info(mycompany)
     user_info = get_user_info(user.id)
-    user_id = str(ctx.user.id)
+    user_id = str(ctx.author.id)
+    b_info = get_blacklist_info(user_id)
     if not await is_authorized_user(user_id, mycompany):
         await ctx.response.send_message("あなたはこの企業の口座にアクセスできません。", ephemeral=True)
         return
 
-    if amount > int(0):
-        if amount <= int(company_info[1]):
-            if amount and mycompany and user:
-                if user_info:
+    if b_info:
+        await ctx.respond("あなたはブラックリストに登録されています。", ephemeral=True)
+    else:
+        if amount > int(0):
+            if amount <= int(company_info[1]):
+                if amount and mycompany and user:
+                    if user_info:
+                        company_info = get_company_info(mycompany)
+                        Balance = int(company_info[1]) - amount
+
+                        remittance = get_user_info(user.id)
+                        partner = int(remittance[1]) + amount
+
+                        company_id = str(mycompany)
+                        cash = int(Balance)
+                        save_company(company_id, cash)
+
+                        user_id = str(user.id)
+                        cash = int(partner)
+                        save_user(user_id, cash)
+
+                        embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+                        embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
+                        embed.add_field(name="送金元", value=f"{mycompany}", inline=False)
+                        embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
+
+                        await ctx.response.send_message(embed=embed)
+                        log_c = await bot.fetch_channel("1262101376591466557")
+                        await log_c.send(f"payコマンド使用\ncompany:{mycompany}\nsend:{user.name}")
+                    else:
+                        await ctx.response.send_message("送金先のユーザーが口座を持っていません。")
+                elif amount and mycompany and company:
                     company_info = get_company_info(mycompany)
                     Balance = int(company_info[1]) - amount
 
-                    remittance = get_user_info(user.id)
+                    remittance = get_company_info(company)
                     partner = int(remittance[1]) + amount
 
-                    company_id = str(mycompany)
+                    Mycompany_id = str(mycompany)
                     cash = int(Balance)
-                    save_company(company_id, cash)
+                    save_company(Mycompany_id, cash)
 
-                    user_id = str(user.id)
+                    company = str(company)
                     cash = int(partner)
-                    save_user(user_id, cash)
+                    save_company(company, cash)
 
                     embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
-                    embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
+                    embed.add_field(name="送金先", value=f"{company}", inline=False)
                     embed.add_field(name="送金元", value=f"{mycompany}", inline=False)
-                    embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
+                    embed.add_field(name="金額", value=f"{amount}", inline=False)
 
                     await ctx.response.send_message(embed=embed)
                     log_c = await bot.fetch_channel("1262101376591466557")
-                    await log_c.send(f"payコマンド使用\ncompany:{mycompany}\nsend:{user.name}")
-                else:
-                    await ctx.response.send_message("送金先のユーザーが口座を持っていません。")
-            elif amount and mycompany and company:
-                company_info = get_company_info(mycompany)
-                Balance = int(company_info[1]) - amount
+                    await log_c.send(f"payコマンド使用\ncompany:{mycompany}\nsend:{company}")
+                elif amount and mycompany and user and reason:
+                    if user_info:
+                        company_info = get_company_info(mycompany)
+                        Balance = int(company_info[1]) - amount
 
-                remittance = get_company_info(company)
-                partner = int(remittance[1]) + amount
+                        remittance = get_user_info(user.id)
+                        partner = int(remittance[1]) + amount
 
-                Mycompany_id = str(mycompany)
-                cash = int(Balance)
-                save_company(Mycompany_id, cash)
+                        company_id = str(mycompany)
+                        cash = int(Balance)
+                        save_company(company_id, cash)
 
-                company = str(company)
-                cash = int(partner)
-                save_company(company, cash)
+                        user_id = str(user.id)
+                        cash = int(partner)
+                        save_user(user_id, cash)
 
-                embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
-                embed.add_field(name="送金先", value=f"{company}", inline=False)
-                embed.add_field(name="送金元", value=f"{mycompany}", inline=False)
-                embed.add_field(name="金額", value=f"{amount}", inline=False)
+                        embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+                        embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
+                        embed.add_field(name="送金元", value=f"{mycompany}", inline=False)
+                        embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
+                        embed.add_field(name="取引内容", value=f"{reason}", inline=False)
 
-                await ctx.response.send_message(embed=embed)
-                log_c = await bot.fetch_channel("1262101376591466557")
-                await log_c.send(f"payコマンド使用\ncompany:{mycompany}\nsend:{company}")
-            elif amount and mycompany and user and reason:
-                if user_info:
+                        await ctx.response.send_message(embed=embed)
+                        log_c = await bot.fetch_channel("1262101376591466557")
+                        await log_c.send(f"payコマンド使用\ncompany:{mycompany}\nsend:{user.name}")
+                    else:
+                        await ctx.response.send_message("送金先のユーザーが口座を持っていません。")
+                elif amount and mycompany and company and reason:
                     company_info = get_company_info(mycompany)
                     Balance = int(company_info[1]) - amount
 
-                    remittance = get_user_info(user.id)
+                    remittance = get_company_info(company)
                     partner = int(remittance[1]) + amount
 
-                    company_id = str(mycompany)
+                    Mycompany_id = str(mycompany)
                     cash = int(Balance)
-                    save_company(company_id, cash)
+                    save_company(Mycompany_id, cash)
 
-                    user_id = str(user.id)
+                    company = str(company)
                     cash = int(partner)
-                    save_user(user_id, cash)
+                    save_company(company, cash)
 
                     embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
-                    embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
+                    embed.add_field(name="送金先", value=f"{company}", inline=False)
                     embed.add_field(name="送金元", value=f"{mycompany}", inline=False)
-                    embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
+                    embed.add_field(name="金額", value=f"{amount}", inline=False)
                     embed.add_field(name="取引内容", value=f"{reason}", inline=False)
 
                     await ctx.response.send_message(embed=embed)
                     log_c = await bot.fetch_channel("1262101376591466557")
-                    await log_c.send(f"payコマンド使用\ncompany:{mycompany}\nsend:{user.name}")
-                else:
-                    await ctx.response.send_message("送金先のユーザーが口座を持っていません。")
-            elif amount and mycompany and company and reason:
-                company_info = get_company_info(mycompany)
-                Balance = int(company_info[1]) - amount
-
-                remittance = get_company_info(company)
-                partner = int(remittance[1]) + amount
-
-                Mycompany_id = str(mycompany)
-                cash = int(Balance)
-                save_company(Mycompany_id, cash)
-
-                company = str(company)
-                cash = int(partner)
-                save_company(company, cash)
-
-                embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
-                embed.add_field(name="送金先", value=f"{company}", inline=False)
-                embed.add_field(name="送金元", value=f"{mycompany}", inline=False)
-                embed.add_field(name="金額", value=f"{amount}", inline=False)
-                embed.add_field(name="取引内容", value=f"{reason}", inline=False)
-
-                await ctx.response.send_message(embed=embed)
-                log_c = await bot.fetch_channel("1262101376591466557")
-                await log_c.send(f"payコマンド使用\ncompany:{mycompany}\nsend:{company}")
+                    await log_c.send(f"payコマンド使用\ncompany:{mycompany}\nsend:{company}")
+            else:
+                await ctx.response.send_message("残高が足りません。", ephemeral=True)
         else:
-            await ctx.response.send_message("残高が足りません。", ephemeral=True)
-    else:
-        await ctx.response.send_message("0以下にはできません。", ephemeral=True)
+            await ctx.response.send_message("0以下にはできません。", ephemeral=True)
 
 
 
@@ -722,18 +709,24 @@ async def add_employee_command(ctx: discord.ApplicationContext, company: discord
     company_id = str(company)
     employee_id = str(user.id)
 
+    user_id = str(ctx.author.id)
+    b_info = get_blacklist_info(user_id)
+
     ceo_id = str(ctx.user.id)
     company_access = await get_company_access(company_id)
     if company_access.get('ceo') != ceo_id:
         await ctx.respond("あなたはこの企業のCEOではありません。社員を追加できません。", ephemeral=True)
         return
 
-    if await add_employee(company_id, employee_id):
-        await ctx.respond(f"{user.mention} が {company} の社員として追加されました。", ephemeral=True)
-        log_c = await bot.fetch_channel("1262101352499384320")
-        await log_c.send(f"addコマンド使用\nuser:{ctx.user.name}\nadd:{user.name}")
+    if b_info:
+        await ctx.respond("あなたはブラックリストに登録されています。", ephemeral=True)
     else:
-        await ctx.respond(f"企業 {company} が見つかりませんでした。", ephemeral=True)
+        if await add_employee(company_id, employee_id):
+            await ctx.respond(f"{user.mention} が {company} の社員として追加されました。", ephemeral=True)
+            log_c = await bot.fetch_channel("1262101352499384320")
+            await log_c.send(f"addコマンド使用\nuser:{ctx.user.name}\nadd:{user.name}")
+        else:
+            await ctx.respond(f"企業 {company} が見つかりませんでした。", ephemeral=True)
 
 
 
@@ -823,32 +816,20 @@ bot.add_application_command(company)
 async def bal(ctx: discord.ApplicationContext):
     user_info = get_user_info(ctx.user.id)
 
-    b_id = str(ctx.user.id)
+    user_id = str(ctx.author.id)
+    b_info =get_blacklist_info(user_id)
 
-    if user_info:
-        embed = discord.Embed(title="残高確認", description=f"{ctx.user.mention}の残高を表示しています。", color=0x4169e1)
-        embed.add_field(name="残高", value=f"{user_info[1]}ノスタル")
-
-        await ctx.respond(embed=embed, ephemeral=True)
+    if b_info:
+        await ctx.respond("あなたはブラックリストに登録されています。", ephemeral=True)
     else:
-        embed = discord.Embed(title="データなし", description="口座がありません。", color=0xff0000)
-        await ctx.respond(embed=embed, ephemeral=True)
+        if user_info:
+            embed = discord.Embed(title="残高確認", description=f"{ctx.user.mention}の残高を表示しています。", color=0x4169e1)
+            embed.add_field(name="残高", value=f"{user_info[1]}ノスタル")
 
-
-
-@bot.user_command(name="balance")
-async def u_bal(ctx, user: discord.Member):
-    user_info = get_user_info(ctx.author.id)
-
-
-    if user_info:
-        embed = discord.Embed(title="残高確認", description=f"{ctx.author.mention}の残高を表示しています。", color=0x4169e1)
-        embed.add_field(name="残高", value=f"{user_info[1]}ノスタル")
-
-        await ctx.respond(embed=embed, ephemeral=True)
-    else:
-        embed = discord.Embed(title="データなし", description="口座がありません。", color=0xff0000)
-        await ctx.respond(embed=embed, ephemeral=True)
+            await ctx.respond(embed=embed, ephemeral=True)
+        else:
+            embed = discord.Embed(title="データなし", description="口座がありません。", color=0xff0000)
+            await ctx.respond(embed=embed, ephemeral=True)
 
 
 
@@ -856,118 +837,124 @@ async def u_bal(ctx, user: discord.Member):
 @commands.guild_only()
 async def pay(ctx: discord.ApplicationContext, amount: discord.Option(int, description="送金する金額を記入"), user: discord.Member = None, company: discord.Option(discord.SlashCommandOptionType.string, description="企業を入力してください") =None , reason: discord.Option(discord.SlashCommandOptionType.string, description="取引内容を入力") =None):
 
+    user_id = str(ctx.author.id)
+
     user_info = get_user_info(ctx.user.id)
+    b_info = get_blacklist_info(user_id)
 
-    if amount > int(0):
-        if amount <= int(user_info[1]):
-            if amount and user and reason:
-                if get_user_info(user.id):
-                    user_info = get_user_info(ctx.author.id)
-                    Balance = int(user_info[1]) - amount
-
-                    remittance = get_user_info(user.id)
-                    partner = int(remittance[1]) + amount
-
-                    user_id = str(ctx.author.id)
-                    cash = int(Balance)
-                    save_user(user_id, cash)
-
-                    user_id = str(user.id)
-                    cash = int(partner)
-                    save_user(user_id, cash)
-
-                    embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
-                    embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
-                    embed.add_field(name="送金元", value=f"{ctx.user.mention}")
-                    embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
-                    embed.add_field(name="取引内容", value=f"{reason}", inline=False)
-
-                    await ctx.response.send_message(embed=embed)
-                else:
-                    await ctx.response.send_message("送金先のユーザーが口座を持っていません。", ephemeral=True)
-            elif amount and user:
-                if get_user_info(user.id):
-                    user_info = get_user_info(ctx.author.id)
-                    Balance = int(user_info[1]) - amount
-
-                    remittance = get_user_info(user.id)
-                    partner = int(remittance[1]) + amount
-
-                    user_id = str(ctx.author.id)
-                    cash = int(Balance)
-                    save_user(user_id, cash)
-
-                    user_id = str(user.id)
-                    cash = int(partner)
-                    save_user(user_id, cash)
-
-                    embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
-                    embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
-                    embed.add_field(name="送金元", value=f"{ctx.user.mention}")
-                    embed.add_field(name="金額", value=f"{amount}", inline=False)
-
-                    await ctx.response.send_message(embed=embed)
-                else:
-                    await ctx.response.send_message("送金先のユーザーが口座を持っていません。", ephemeral=True)
-            elif amount and company and reason:
-                if get_company_info(company):
-                    user_info = get_user_info(ctx.author.id)
-                    Balance = int(user_info[1]) - amount
-
-                    remittance = get_company_info(company)
-                    partner = int(remittance[1]) + amount
-
-                    user_id = str(ctx.author.id)
-                    cash = int(Balance)
-                    save_user(user_id, cash)
-
-                    company_id = str(company)
-                    cash = int(partner)
-                    save_company(company_id, cash)
-
-                    embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
-                    embed.add_field(name="送金先", value=f"{company}", inline=False)
-                    embed.add_field(name="送金元", value=f"{ctx.user.mention}")
-                    embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
-                    embed.add_field(name="取引内容", value=f"{reason}", inline=False)
-
-                    await ctx.response.send_message(embed=embed)
-                else:
-                    await ctx.response.send_message(f"{company}という口座は存在しません。")
-            elif amount and company:
-                if get_company_info(company):
-                    user_info = get_user_info(ctx.author.id)
-                    Balance = int(user_info[1]) - amount
-
-                    remittance = get_company_info(company)
-                    partner = int(remittance[1]) + amount
-
-                    user_id = str(ctx.author.id)
-                    cash = int(Balance)
-                    save_user(user_id, cash)
-
-                    company_id = str(company)
-                    cash = int(partner)
-                    save_company(company_id, cash)
-
-                    embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
-                    embed.add_field(name="送金先", value=f"{company}", inline=False)
-                    embed.add_field(name="送金元", value=f"{ctx.user.mention}")
-                    embed.add_field(name="金額", value=f"{amount}", inline=False)
-
-                    await ctx.response.send_message(embed=embed)
-                else:
-                    await ctx.response.send_message(f"{company}という口座は存在しません。")
-            elif amount and user and company:
-                await ctx.response.send_message("userかcompanyはどちらか一方を入力してください。", ephemeral=True)
-            elif amount and user and company and reason:
-                await ctx.response.send_message("userかcompanyはどちらか一方を入力してください。", ephemeral=True)
-            else:
-                await ctx.response.send_message("送金先を入力してください。", ephemeral=True)
-        else:
-            await ctx.response.send_message("残高が足りません。", ephemeral=True)
+    if b_info:
+        await ctx.respond("あなたはブラックリストに登録されています。", ephemeral=True)
     else:
-        await ctx.response.send_message("1以上の値を入力してください。", ephemeral=True)
+        if amount > int(0):
+            if amount <= int(user_info[1]):
+                if amount and user and reason:
+                    if get_user_info(user.id):
+                        user_info = get_user_info(ctx.author.id)
+                        Balance = int(user_info[1]) - amount
+
+                        remittance = get_user_info(user.id)
+                        partner = int(remittance[1]) + amount
+
+                        user_id = str(ctx.author.id)
+                        cash = int(Balance)
+                        save_user(user_id, cash)
+
+                        user_id = str(user.id)
+                        cash = int(partner)
+                        save_user(user_id, cash)
+
+                        embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+                        embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
+                        embed.add_field(name="送金元", value=f"{ctx.user.mention}")
+                        embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
+                        embed.add_field(name="取引内容", value=f"{reason}", inline=False)
+
+                        await ctx.response.send_message(embed=embed)
+                    else:
+                        await ctx.response.send_message("送金先のユーザーが口座を持っていません。", ephemeral=True)
+                elif amount and user:
+                    if get_user_info(user.id):
+                        user_info = get_user_info(ctx.author.id)
+                        Balance = int(user_info[1]) - amount
+
+                        remittance = get_user_info(user.id)
+                        partner = int(remittance[1]) + amount
+
+                        user_id = str(ctx.author.id)
+                        cash = int(Balance)
+                        save_user(user_id, cash)
+
+                        user_id = str(user.id)
+                        cash = int(partner)
+                        save_user(user_id, cash)
+
+                        embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+                        embed.add_field(name="送金先", value=f"{user.mention}", inline=False)
+                        embed.add_field(name="送金元", value=f"{ctx.user.mention}")
+                        embed.add_field(name="金額", value=f"{amount}", inline=False)
+
+                        await ctx.response.send_message(embed=embed)
+                    else:
+                        await ctx.response.send_message("送金先のユーザーが口座を持っていません。", ephemeral=True)
+                elif amount and company and reason:
+                    if get_company_info(company):
+                        user_info = get_user_info(ctx.author.id)
+                        Balance = int(user_info[1]) - amount
+
+                        remittance = get_company_info(company)
+                        partner = int(remittance[1]) + amount
+
+                        user_id = str(ctx.author.id)
+                        cash = int(Balance)
+                        save_user(user_id, cash)
+
+                        company_id = str(company)
+                        cash = int(partner)
+                        save_company(company_id, cash)
+
+                        embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+                        embed.add_field(name="送金先", value=f"{company}", inline=False)
+                        embed.add_field(name="送金元", value=f"{ctx.user.mention}")
+                        embed.add_field(name="金額", value=f"{amount}ノスタル", inline=False)
+                        embed.add_field(name="取引内容", value=f"{reason}", inline=False)
+
+                        await ctx.response.send_message(embed=embed)
+                    else:
+                        await ctx.response.send_message(f"{company}という口座は存在しません。")
+                elif amount and company:
+                    if get_company_info(company):
+                        user_info = get_user_info(ctx.author.id)
+                        Balance = int(user_info[1]) - amount
+
+                        remittance = get_company_info(company)
+                        partner = int(remittance[1]) + amount
+
+                        user_id = str(ctx.author.id)
+                        cash = int(Balance)
+                        save_user(user_id, cash)
+
+                        company_id = str(company)
+                        cash = int(partner)
+                        save_company(company_id, cash)
+
+                        embed = discord.Embed(title="送金", description="以下の内容で送金を行いました。", color=0x38c571)
+                        embed.add_field(name="送金先", value=f"{company}", inline=False)
+                        embed.add_field(name="送金元", value=f"{ctx.user.mention}")
+                        embed.add_field(name="金額", value=f"{amount}", inline=False)
+
+                        await ctx.response.send_message(embed=embed)
+                    else:
+                        await ctx.response.send_message(f"{company}という口座は存在しません。")
+                elif amount and user and company:
+                    await ctx.response.send_message("userかcompanyはどちらか一方を入力してください。", ephemeral=True)
+                elif amount and user and company and reason:
+                    await ctx.response.send_message("userかcompanyはどちらか一方を入力してください。", ephemeral=True)
+                else:
+                    await ctx.response.send_message("送金先を入力してください。", ephemeral=True)
+            else:
+                await ctx.response.send_message("残高が足りません。", ephemeral=True)
+        else:
+            await ctx.response.send_message("1以上の値を入力してください。", ephemeral=True)
 
 
 
@@ -1079,7 +1066,7 @@ class editModal(discord.ui.Modal):
 @commands.has_any_role(962650031658250300, 1237718104918982666, 1262092644994125824)
 async def edit(ctx, message: discord.Message):
 
-    if message.embeds:  # 埋め込みが含まれている場合
+    if message.embeds:
         embed = message.embeds[0]
 
         if embed.author.name == ctx.user.display_name:
@@ -1212,29 +1199,38 @@ async def tax(ctx: discord.ApplicationContext):
     amount = int(200)
     user_info = get_user_info(ctx.author.id)
 
-    if amount <= int(user_info[1]):
-        company = "ノースユーピテル税務署"
+    user_id = str(ctx.author.id)
+    b_info = get_blacklist_info(user_id)
 
-        Balance = int(user_info[1]) - amount
 
-        remittance = get_company_info(company)
-        partner = int(remittance[1]) + amount
-
-        user_id = str(ctx.author.id)
-        cash = int(Balance)
-        save_user(user_id, cash)
-
-        company_id = str(company)
-        cash = int(partner)
-        save_company(company_id, cash)
-
-        embed = discord.Embed(title="納税", description="以下の内容で納税を行いました。", color=0x38c571)
-        embed.add_field(name="納税者", value=f"{ctx.author.mention}")
-        embed.add_field(name="金額", value=f"{amount}", inline=False)
-
-        await ctx.response.send_message(embed=embed)
+    if b_info:
+        await ctx.respond("あなたはブラックリストに登録されています。", ephemeral=True)
     else:
-        await ctx.response.send_message("残高が足りません。", ephemeral=True)
+        if amount <= int(user_info[1]):
+            company = "ノースユーピテル税務署"
+
+            Balance = int(user_info[1]) - amount
+
+            remittance = get_company_info(company)
+            partner = int(remittance[1]) + amount
+
+            user_id = str(ctx.author.id)
+            cash = int(Balance)
+            save_user(user_id, cash)
+
+            company_id = str(company)
+            cash = int(partner)
+            save_company(company_id, cash)
+
+            embed = discord.Embed(title="納税", description="以下の内容で納税を行いました。", color=0x38c571)
+            embed.add_field(name="納税者", value=f"{ctx.author.mention}")
+            embed.add_field(name="金額", value=f"{amount}", inline=False)
+
+            await ctx.response.send_message(embed=embed)
+            log_c = await bot.fetch_channel("1276418981431083121")
+            await log_c.send(f"taxコマンド使用\n納税者:{ctx.author.display_name}")
+        else:
+            await ctx.response.send_message("残高が足りません。", ephemeral=True)
 
 
 
