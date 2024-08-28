@@ -94,24 +94,6 @@ def stop_py():
 
 
 
-async def read_json(file_name):
-    with open(file_name, 'r') as f:
-        data = json.load(f)
-    return data
-
-async def read_multiple_json(files):
-    tasks = [read_json(file) for file in files]
-    results = await asyncio.gather(*tasks)
-    return results
-
-# 読み込むJSONファイルのリスト
-files = ['blacklist.json']
-
-# 非同期で複数のJSONファイルを読み込む
-asyncio.run(read_multiple_json(files))
-
-
-
 
 TOML_FILE = 'company.toml'
 
