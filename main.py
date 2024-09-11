@@ -100,12 +100,12 @@ TOML_FILE = 'company.toml'
 async def load_company_data():
     if not os.path.exists(TOML_FILE):
         return {}
-    async with aiofiles.open(TOML_FILE, 'r') as file:
+    async with aiofiles.open(TOML_FILE, 'r', encoding='utf-8') as file:
         contents = await file.read()
         return toml.loads(contents).get('companies', {})
 
 async def save_company_data(data):
-    async with aiofiles.open(TOML_FILE, 'w') as file:
+    async with aiofiles.open(TOML_FILE, 'w', encoding='utf-8') as file:
         await file.write(toml.dumps({'companies': data}))
 
 
